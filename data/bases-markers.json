@@ -1,0 +1,39 @@
+[
+  {
+    "id": "base-1",
+    "name": "Base Utama Pantai Utara",
+    "type": "main_base",
+    "typeName": "🏰 Base Utama",
+    "location": "Pantai Utara dekat Gua Rebreather",
+    "coords": "Pantai Utara (Dekat Spawn Helikopter)",
+    "notes": "Base sentral tim. Dilengkapi Helipad, 4 Drying Rack, 2 Water Collector, dan Wall Log Spike keliling.",
+    "mapUrl": "https://mapgenie.io/sons-of-the-forest/maps/world",
+    "addedBy": "Wildan (Host)",
+    "createdAt": "2026-11-05T09:00:00.000Z"
+  },
+  {
+    "id": "base-2",
+    "name": "Shelter Darurat Lereng Salju",
+    "type": "outpost",
+    "typeName": "⛺ Outpost / Shelter",
+    "location": "Lereng Gunung Tengah menuju Gua Shovel",
+    "coords": "Ketinggian Salju Gunung Tengah",
+    "notes": "Titik istirahat sebelum masuk Gua Shovel. Ada Stone Fireplace permanen, kasur simpan data, dan stok herbal ramuan.",
+    "mapUrl": "https://mapgenie.io/sons-of-the-forest/maps/world",
+    "addedBy": "Wildan (Host)",
+    "createdAt": "2026-11-05T09:15:00.000Z"
+  },
+  {
+    "id": "base-3",
+    "name": "Zipline Hub & Parkir Glider",
+    "type": "zipline",
+    "typeName": "🚡 Jaringan Zipline & Glider",
+    "location": "Puncak Tebing Air Terjun Barat",
+    "coords": "Tebing Air Terjun Barat",
+    "notes": "Jalur lintas cepat udara dari puncak tebing langsung turun ke tepi danau base log cabin. Tersedia 2 Hang Glider.",
+    "mapUrl": "https://mapgenie.io/sons-of-the-forest/maps/world",
+    "addedBy": "Wildan (Host)",
+    "createdAt": "2026-11-05T09:30:00.000Z"
+  }
+]
+

@@ -1,0 +1,43 @@
+{
+  "channelId": "1567812735264366687",
+  "messageId": "1567812738326069259",
+  "lastUpdated": 1794153060028,
+  "steps": {
+    "1": {
+      "completed": true,
+      "completedBy": "urmomsbutt19",
+      "completedAt": "2026-11-06T03:38:25.416Z"
+    },
+    "2": {
+      "completed": false,
+      "completedBy": null,
+      "completedAt": null
+    },
+    "3": {
+      "completed": false,
+      "completedBy": null,
+      "completedAt": null
+    },
+    "4": {
+      "completed": false,
+      "completedBy": null,
+      "completedAt": null
+    },
+    "5": {
+      "completed": false,
+      "completedBy": null,
+      "completedAt": null
+    },
+    "6": {
+      "completed": true,
+      "completedBy": "wildanpics",
+      "completedAt": "2026-11-05T12:19:52.860Z"
+    },
+    "7": {
+      "completed": false,
+      "completedBy": null,
+      "completedAt": null
+    }
+  },
+  "viewMode": "compact"
+}

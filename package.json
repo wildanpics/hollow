@@ -1,0 +1,16 @@
+{
+  "name": "hollowborn-discord-bot",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Role generator and permission manager for the HOLLOWBORN Discord server",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "deploy": "node deploy-commands.js"
+  },
+  "dependencies": {
+    "@napi-rs/canvas": "^1.1.0",
+    "discord.js": "^14.19.3",
+    "dotenv": "^16.4.7"
+  }
+}
