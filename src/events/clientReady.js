@@ -1,6 +1,6 @@
 const { Events, ActivityType } = require("discord.js");
 const { loadRoadmapProgress, syncRoadmapPermanentMessage } = require("../storage/roadmapStorage");
-const { startMabarReminderInterval } = require("../utils/mabarManager");
+const { startMabarReminderInterval, loadMabarSessions } = require("../utils/mabarManager");
 
 module.exports = {
   name: Events.ClientReady,
@@ -17,6 +17,10 @@ module.exports = {
       await syncRoadmapPermanentMessage(client, initialRoadmap).catch(() => {});
       console.log("[Roadmap] Pinned Roadmap Dashboard tersinkronisasi ke tampilan Canvas HUD terbaru.");
     }
+
+    // Load active persistent mabar sessions
+    loadMabarSessions();
+    console.log("[Mabar] Sesi mabar aktif dimuat dari storage.");
 
     // Start mabar reminder loop
     startMabarReminderInterval(client);

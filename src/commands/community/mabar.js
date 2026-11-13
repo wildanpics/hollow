@@ -1,5 +1,6 @@
 const {
   mabarSessions,
+  saveMabarSessions,
   buildQuickMabarGamePanel,
   parseMabarTime,
   formatMabarTimeDisplay,
@@ -25,7 +26,7 @@ module.exports = {
     const targetTime = parseMabarTime(timeInput);
     if (!targetTime) {
       return interaction.reply({
-        content: "❌ Format waktu tidak valid. Gunakan contoh:\n• Jam pasti: `20:00`, `21.30`, `besok 20:00`\n• Durasi: `2 jam`, `45 menit`, `sekarang`",
+        content: "❌ Format waktu tidak valid. Gunakan contoh:\n• Jam pasti: `20:00`, `21.30 wib`, `jam 8 malam`\n• Durasi: `2 jam`, `45 menit`, `sekarang`",
         ephemeral: true
       });
     }
@@ -33,6 +34,8 @@ module.exports = {
     await interaction.deferReply();
 
     const hostName = interaction.member?.displayName || interaction.user.displayName || interaction.user.username;
+    const isImmediate = targetTime.getTime() - Date.now() <= 2 * 60000;
+
     const session = {
       game,
       note,
@@ -45,8 +48,8 @@ module.exports = {
       attendees: new Set([interaction.user.id]),
       late: new Set(),
       declined: new Set(),
-      reminded10m: false,
-      remindedStart: false
+      reminded10m: isImmediate,
+      remindedStart: isImmediate
     };
 
     const payload = await buildMabarPayload(session, interaction.client);
@@ -54,6 +57,7 @@ module.exports = {
 
     const replyMsg = await interaction.editReply(payload);
     mabarSessions.set(replyMsg.id, session);
+    saveMabarSessions();
     return;
   },
   async executePrefix(message, args) {
@@ -71,6 +75,8 @@ module.exports = {
     );
 
     const hostName = message.member?.displayName || message.author.displayName || message.author.username;
+    const isImmediate = targetTime.getTime() - Date.now() <= 2 * 60000;
+
     const session = {
       game: parsed.game,
       note: parsed.note || "Mabar santai HOLLOWBORN",
@@ -83,8 +89,8 @@ module.exports = {
       attendees: new Set([message.author.id]),
       late: new Set(),
       declined: new Set(),
-      reminded10m: false,
-      remindedStart: false
+      reminded10m: isImmediate,
+      remindedStart: isImmediate
     };
 
     const payload = await buildMabarPayload(session, message.client);
@@ -92,6 +98,7 @@ module.exports = {
 
     const sent = await message.channel.send(payload);
     mabarSessions.set(sent.id, session);
+    saveMabarSessions();
     return;
   }
 };

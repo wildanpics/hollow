@@ -29,6 +29,7 @@ const {
 const { loadUserLoadouts, saveUserLoadouts } = require("../storage/loadoutStorage");
 const {
   mabarSessions,
+  saveMabarSessions,
   buildQuickMabarTimePanel,
   parseMabarTime,
   formatMabarTimeDisplay,
@@ -272,7 +273,8 @@ async function handleComponent(interaction) {
 
     // QUICK MABAR BUTTONS
     if (cid === "qm_cancel") {
-      return interaction.message.delete().catch(() => { });
+      await interaction.deferUpdate().catch(() => {});
+      return interaction.message.delete().catch(() => {});
     }
 
     if (cid === "qm_game_sotf" || cid === "qm_game_dayz" || cid === "qm_game_valheim") {
@@ -323,6 +325,8 @@ async function handleComponent(interaction) {
         return interaction.showModal(modal);
       }
 
+      await interaction.deferUpdate().catch(() => {});
+
       let targetTime = new Date();
       if (timeType === "30m") targetTime = new Date(Date.now() + 30 * 60000);
       if (timeType === "1h") targetTime = new Date(Date.now() + 60 * 60000);
@@ -335,6 +339,9 @@ async function handleComponent(interaction) {
       );
 
       const hostName = interaction.member?.displayName || interaction.user.displayName || interaction.user.username;
+      const diffMs = targetTime.getTime() - Date.now();
+      const isImmediate = diffMs <= 2 * 60000;
+
       const session = {
         game: gameName,
         note: "Mabar santai HOLLOWBORN",
@@ -347,8 +354,9 @@ async function handleComponent(interaction) {
         attendees: new Set([interaction.user.id]),
         late: new Set(),
         declined: new Set(),
-        reminded10m: false,
-        remindedStart: false
+        isImmediate,
+        reminded10m: isImmediate || diffMs < 10 * 60000,
+        remindedStart: isImmediate
       };
 
       const payload = await buildMabarPayload(session, interaction.client);
@@ -358,14 +366,16 @@ async function handleComponent(interaction) {
       if (interaction.message?.flags?.has(MessageFlags.Ephemeral) || interaction.message?.ephemeral) {
         const sentMsg = await interaction.channel.send(payload);
         mabarSessions.set(sentMsg.id, session);
-        return interaction.update({
+        saveMabarSessions();
+        return interaction.editReply({
           content: `⚔️ **Jadwal Ekspedisi Mabar Berhasil Dipublish!**\nTiket misi telah dibuka untuk seluruh anggota di channel ini:\n${sentMsg.url}`,
           embeds: [],
           components: []
         });
       } else {
-        await interaction.update(payload);
+        await interaction.editReply(payload);
         mabarSessions.set(interaction.message.id, session);
+        saveMabarSessions();
         return;
       }
     }
@@ -380,23 +390,66 @@ async function handleComponent(interaction) {
         });
       }
 
-      await interaction.deferUpdate();
-
+      await interaction.deferUpdate().catch(() => {});
       const userId = interaction.user.id;
-      if (cid === "mabar_join") {
-        session.attendees.add(userId);
-        session.late.delete(userId);
-        session.declined.delete(userId);
-      } else if (cid === "mabar_late") {
-        session.late.add(userId);
-        session.attendees.delete(userId);
-        session.declined.delete(userId);
-      } else if (cid === "mabar_leave") {
-        session.declined.add(userId);
-        session.attendees.delete(userId);
-        session.late.delete(userId);
+
+      if (cid === "mabar_cancel") {
+        const isHost = interaction.user.id === session.hostId;
+        const isAdmin = interaction.member?.permissions?.has(PermissionsBitField.Flags.ManageRoles) ||
+                        interaction.member?.permissions?.has(PermissionsBitField.Flags.Administrator);
+
+        if (!isHost && !isAdmin) {
+          return interaction.followUp({
+            content: "❌ Hanya host sesi mabar atau Admin yang dapat membatalkan jadwal ini.",
+            ephemeral: true
+          });
+        }
+
+        mabarSessions.delete(interaction.message.id);
+        saveMabarSessions();
+
+        const cancelEmbed = new EmbedBuilder()
+          .setColor(0xED4245)
+          .setTitle("🚫 JADWAL MABAR DIBATALKAN")
+          .setDescription(`Sesi mabar **${session.game}** telah dibatalkan oleh <@${interaction.user.id}>.`)
+          .setFooter({ text: "Hollowborn Gaming Community • Operasi Dibatalkan" })
+          .setTimestamp();
+
+        return interaction.editReply({
+          content: null,
+          embeds: [cancelEmbed],
+          components: [],
+          files: []
+        });
       }
 
+      if (cid === "mabar_join") {
+        if (session.attendees.has(userId)) {
+          session.attendees.delete(userId);
+        } else {
+          session.attendees.add(userId);
+          session.late.delete(userId);
+          session.declined.delete(userId);
+        }
+      } else if (cid === "mabar_late") {
+        if (session.late.has(userId)) {
+          session.late.delete(userId);
+        } else {
+          session.late.add(userId);
+          session.attendees.delete(userId);
+          session.declined.delete(userId);
+        }
+      } else if (cid === "mabar_leave") {
+        if (session.declined.has(userId)) {
+          session.declined.delete(userId);
+        } else {
+          session.declined.add(userId);
+          session.attendees.delete(userId);
+          session.late.delete(userId);
+        }
+      }
+
+      saveMabarSessions();
       const payload = await buildMabarPayload(session, interaction.client);
       return interaction.editReply(payload);
     }
@@ -534,6 +587,8 @@ async function handleComponent(interaction) {
     }
 
     if (interaction.customId.startsWith("qm_modal_time_")) {
+      await interaction.deferUpdate().catch(() => {});
+
       const gameName = decodeURIComponent(interaction.customId.replace("qm_modal_time_", ""));
       const customTimeInput = interaction.fields.getTextInputValue("input_custom_time");
       const targetTime = parseMabarTime(customTimeInput) || new Date();
@@ -544,6 +599,9 @@ async function handleComponent(interaction) {
       );
 
       const hostName = interaction.member?.displayName || interaction.user.displayName || interaction.user.username;
+      const diffMs = targetTime.getTime() - Date.now();
+      const isImmediate = diffMs <= 2 * 60000;
+
       const session = {
         game: gameName,
         note: "Mabar santai HOLLOWBORN",
@@ -556,8 +614,9 @@ async function handleComponent(interaction) {
         attendees: new Set([interaction.user.id]),
         late: new Set(),
         declined: new Set(),
-        reminded10m: false,
-        remindedStart: false
+        isImmediate,
+        reminded10m: isImmediate || diffMs < 10 * 60000,
+        remindedStart: isImmediate
       };
 
       const payload = await buildMabarPayload(session, interaction.client);
@@ -566,14 +625,16 @@ async function handleComponent(interaction) {
       if (interaction.message?.flags?.has(MessageFlags.Ephemeral) || interaction.message?.ephemeral) {
         const sentMsg = await interaction.channel.send(payload);
         mabarSessions.set(sentMsg.id, session);
-        return interaction.update({
+        saveMabarSessions();
+        return interaction.editReply({
           content: `⚔️ **Jadwal Ekspedisi Mabar Berhasil Dipublish!**\nTiket misi telah dibuka untuk seluruh anggota di channel ini:\n${sentMsg.url}`,
           embeds: [],
           components: []
         });
       } else {
-        await interaction.update(payload);
+        await interaction.editReply(payload);
         mabarSessions.set(interaction.message.id, session);
+        saveMabarSessions();
         return;
       }
     }
