@@ -82,13 +82,22 @@ function computeAllSurvivorLeaderboard(guild) {
   return list;
 }
 
-async function buildProfileMessage(member, theme = "bunker") {
+async function buildProfileMessage(member, theme = "chrome") {
   const stats = computeSurvivorStats(member.user, member.guild);
   const buffer = await generateProfileCanvas(member, stats, theme);
   const attachment = new AttachmentBuilder(buffer, { name: "survivor-profile.png" });
 
+  const THEME_COLORS = {
+    chrome: 0xE2E8F0,
+    bunker: 0x00E5FF,
+    frost: 0x80D8FF,
+    solafite: 0xFFD700,
+    toxic: 0x00E676
+  };
+  const embedColor = THEME_COLORS[theme] || THEME_COLORS.chrome;
+
   const embed = new EmbedBuilder()
-    .setColor(theme === "frost" ? 0x80D8FF : theme === "solafite" ? 0xFFD700 : theme === "toxic" ? 0x00E676 : 0x00E5FF)
+    .setColor(embedColor)
     .setTitle(`🪪 TACTICAL SURVIVOR ID // ${member.displayName.toUpperCase()}`)
     .setDescription(
       `**OPERATIVE:** <@${member.id}> (${member.user.tag})\n` +
@@ -99,14 +108,15 @@ async function buildProfileMessage(member, theme = "bunker") {
       `*Gunakan tombol di bawah untuk mengganti tema visual kartu identitasmu:*`
     )
     .setImage("attachment://survivor-profile.png")
-    .setFooter({ text: "HOLLOWBORN Tactical Network • Sons of the Forest Site 2" })
+    .setFooter({ text: "HOLLOWBORN • BORN FROM NOTHING. UNITED AS ONE." })
     .setTimestamp();
 
   const row = new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId(`prof_bunker_${member.id}`).setLabel("Bunker Cyan").setEmoji("🎛️").setStyle(theme === "bunker" ? ButtonStyle.Success : ButtonStyle.Secondary),
-    new ButtonBuilder().setCustomId(`prof_frost_${member.id}`).setLabel("Frost Peak").setEmoji("❄️").setStyle(theme === "frost" ? ButtonStyle.Success : ButtonStyle.Secondary),
-    new ButtonBuilder().setCustomId(`prof_solafite_${member.id}`).setLabel("Solafite Gold").setEmoji("👑").setStyle(theme === "solafite" ? ButtonStyle.Success : ButtonStyle.Secondary),
-    new ButtonBuilder().setCustomId(`prof_toxic_${member.id}`).setLabel("Toxic Green").setEmoji("☣️").setStyle(theme === "toxic" ? ButtonStyle.Success : ButtonStyle.Secondary)
+    new ButtonBuilder().setCustomId(`prof_chrome_${member.id}`).setLabel("Chrome").setEmoji("⚔️").setStyle(theme === "chrome" ? ButtonStyle.Success : ButtonStyle.Secondary),
+    new ButtonBuilder().setCustomId(`prof_bunker_${member.id}`).setLabel("Bunker").setEmoji("🎛️").setStyle(theme === "bunker" ? ButtonStyle.Success : ButtonStyle.Secondary),
+    new ButtonBuilder().setCustomId(`prof_frost_${member.id}`).setLabel("Frost").setEmoji("❄️").setStyle(theme === "frost" ? ButtonStyle.Success : ButtonStyle.Secondary),
+    new ButtonBuilder().setCustomId(`prof_solafite_${member.id}`).setLabel("Solafite").setEmoji("👑").setStyle(theme === "solafite" ? ButtonStyle.Success : ButtonStyle.Secondary),
+    new ButtonBuilder().setCustomId(`prof_toxic_${member.id}`).setLabel("Toxic").setEmoji("☣️").setStyle(theme === "toxic" ? ButtonStyle.Success : ButtonStyle.Secondary)
   );
 
   return { embed, rows: [row], files: [attachment] };

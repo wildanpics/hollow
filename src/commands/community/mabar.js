@@ -2,6 +2,7 @@ const {
   mabarSessions,
   buildQuickMabarGamePanel,
   parseMabarTime,
+  formatMabarTimeDisplay,
   parseQuickMabarText,
   buildMabarPayload
 } = require("../../utils/mabarManager");
@@ -29,11 +30,16 @@ module.exports = {
       });
     }
 
+    await interaction.deferReply();
+
+    const hostName = interaction.member?.displayName || interaction.user.displayName || interaction.user.username;
     const session = {
       game,
       note,
       targetTime,
+      rawTime: formatMabarTimeDisplay(targetTime),
       hostId: interaction.user.id,
+      hostTag: hostName,
       channelId: interaction.channelId,
       mentionRoleId: mentionRole ? mentionRole.id : null,
       attendees: new Set([interaction.user.id]),
@@ -45,9 +51,8 @@ module.exports = {
 
     const payload = await buildMabarPayload(session, interaction.client);
     if (mentionRole) payload.content = `<@&${mentionRole.id}> Waktu mabar baru telah dijadwalkan!`;
-    payload.fetchReply = true;
 
-    const replyMsg = await interaction.reply(payload);
+    const replyMsg = await interaction.editReply(payload);
     mabarSessions.set(replyMsg.id, session);
     return;
   },
@@ -65,11 +70,14 @@ module.exports = {
       r.name.includes(parsed.game) || r.name.includes("GAME NIGHT")
     );
 
+    const hostName = message.member?.displayName || message.author.displayName || message.author.username;
     const session = {
       game: parsed.game,
       note: parsed.note || "Mabar santai HOLLOWBORN",
       targetTime,
+      rawTime: formatMabarTimeDisplay(targetTime),
       hostId: message.author.id,
+      hostTag: hostName,
       channelId: message.channel.id,
       mentionRoleId: mentionRole ? mentionRole.id : null,
       attendees: new Set([message.author.id]),

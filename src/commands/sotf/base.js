@@ -59,8 +59,8 @@ module.exports = {
     }
 
     if (subcommand === "delete") {
-      const targetId = interaction.options.getString("id", true);
-      const target = bases.find(b => b.id === targetId || b.name.toLowerCase() === targetId.toLowerCase());
+      const targetId = interaction.options.getString("nama") || interaction.options.getString("id");
+      const target = bases.find(b => b.id === targetId || b.name.toLowerCase() === targetId?.toLowerCase());
       if (!target) {
         return interaction.reply({ content: "Base tidak ditemukan.", ephemeral: true });
       }

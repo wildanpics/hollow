@@ -4,7 +4,8 @@ const {
   TextInputBuilder,
   TextInputStyle,
   ActionRowBuilder,
-  EmbedBuilder
+  EmbedBuilder,
+  MessageFlags
 } = require("discord.js");
 const { SOTF_ITEMS } = require("../config/sotf-items");
 const { SOTF_ROADMAP, SOTF_TIPS_BY_STAGE } = require("../config/sotf-roadmap");
@@ -30,6 +31,7 @@ const {
   mabarSessions,
   buildQuickMabarTimePanel,
   parseMabarTime,
+  formatMabarTimeDisplay,
   buildMabarPayload,
   buildQuickMabarGamePanel
 } = require("../utils/mabarManager");
@@ -145,8 +147,9 @@ async function handleComponent(interaction) {
       const targetMember = interaction.guild.members.cache.get(targetId) || await interaction.guild.members.fetch(targetId).catch(() => null);
       if (!targetMember) return interaction.reply({ content: "Survivor tidak ditemukan.", ephemeral: true });
 
+      await interaction.deferUpdate();
       const { embed, rows, files } = await buildProfileMessage(targetMember, theme);
-      return interaction.update({ embeds: [embed], components: rows, files });
+      return interaction.editReply({ embeds: [embed], components: rows, files });
     }
 
     // MAP — Filter Buttons
@@ -331,11 +334,14 @@ async function handleComponent(interaction) {
         r.name.includes(gameName) || r.name.includes("GAME NIGHT")
       );
 
+      const hostName = interaction.member?.displayName || interaction.user.displayName || interaction.user.username;
       const session = {
         game: gameName,
         note: "Mabar santai HOLLOWBORN",
         targetTime,
+        rawTime: formatMabarTimeDisplay(targetTime),
         hostId: interaction.user.id,
+        hostTag: hostName,
         channelId: interaction.channelId,
         mentionRoleId: mentionRole ? mentionRole.id : null,
         attendees: new Set([interaction.user.id]),
@@ -347,10 +353,21 @@ async function handleComponent(interaction) {
 
       const payload = await buildMabarPayload(session, interaction.client);
       if (mentionRole) payload.content = `<@&${mentionRole.id}> Waktu mabar baru telah dijadwalkan!`;
-      await interaction.update(payload);
 
-      mabarSessions.set(interaction.message.id, session);
-      return;
+      // If triggered from an ephemeral panel (e.g. /map rally), send public announcement to channel
+      if (interaction.message?.flags?.has(MessageFlags.Ephemeral) || interaction.message?.ephemeral) {
+        const sentMsg = await interaction.channel.send(payload);
+        mabarSessions.set(sentMsg.id, session);
+        return interaction.update({
+          content: `⚔️ **Jadwal Ekspedisi Mabar Berhasil Dipublish!**\nTiket misi telah dibuka untuk seluruh anggota di channel ini:\n${sentMsg.url}`,
+          embeds: [],
+          components: []
+        });
+      } else {
+        await interaction.update(payload);
+        mabarSessions.set(interaction.message.id, session);
+        return;
+      }
     }
 
     // MABAR RSVP BUTTONS
@@ -362,6 +379,8 @@ async function handleComponent(interaction) {
           ephemeral: true
         });
       }
+
+      await interaction.deferUpdate();
 
       const userId = interaction.user.id;
       if (cid === "mabar_join") {
@@ -379,7 +398,7 @@ async function handleComponent(interaction) {
       }
 
       const payload = await buildMabarPayload(session, interaction.client);
-      return interaction.update(payload);
+      return interaction.editReply(payload);
     }
 
     // ROADMAP TOGGLE BUTTONS
@@ -524,11 +543,14 @@ async function handleComponent(interaction) {
         r.name.includes(gameName) || r.name.includes("GAME NIGHT")
       );
 
+      const hostName = interaction.member?.displayName || interaction.user.displayName || interaction.user.username;
       const session = {
         game: gameName,
         note: "Mabar santai HOLLOWBORN",
         targetTime,
+        rawTime: formatMabarTimeDisplay(targetTime),
         hostId: interaction.user.id,
+        hostTag: hostName,
         channelId: interaction.channelId,
         mentionRoleId: mentionRole ? mentionRole.id : null,
         attendees: new Set([interaction.user.id]),
@@ -540,10 +562,20 @@ async function handleComponent(interaction) {
 
       const payload = await buildMabarPayload(session, interaction.client);
       if (mentionRole) payload.content = `<@&${mentionRole.id}> Waktu mabar baru telah dijadwalkan!`;
-      await interaction.update(payload);
 
-      mabarSessions.set(interaction.message.id, session);
-      return;
+      if (interaction.message?.flags?.has(MessageFlags.Ephemeral) || interaction.message?.ephemeral) {
+        const sentMsg = await interaction.channel.send(payload);
+        mabarSessions.set(sentMsg.id, session);
+        return interaction.update({
+          content: `⚔️ **Jadwal Ekspedisi Mabar Berhasil Dipublish!**\nTiket misi telah dibuka untuk seluruh anggota di channel ini:\n${sentMsg.url}`,
+          embeds: [],
+          components: []
+        });
+      } else {
+        await interaction.update(payload);
+        mabarSessions.set(interaction.message.id, session);
+        return;
+      }
     }
 
     // MODAL ADD BASE

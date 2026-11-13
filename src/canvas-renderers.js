@@ -356,155 +356,146 @@ async function generateWelcomeCanvas(member) {
 // 2. 🪪 TACTICAL SURVIVOR PROFILE ID CARD
 // ==========================================
 
-async function generateProfileCanvas(member, stats = {}, theme = "bunker") {
-  const width = 920;
-  const height = 480;
+async function generateProfileCanvas(member, stats = {}, theme = "chrome") {
+  const width = 1024;
+  const height = 460;
   const canvas = createCanvas(width, height);
   const ctx = canvas.getContext("2d");
 
-  const avatarUrl = member.user.displayAvatarURL({ extension: "png", size: 256 });
-  const avatarImg = await safeLoadAvatar(avatarUrl);
+  const [avatarImg, bgImg, frameImg] = await Promise.all([
+    safeLoadAvatar(member.user.displayAvatarURL({ extension: "png", size: 256 })),
+    getWelcomeBgImage(),
+    getWelcomeFrameImage()
+  ]);
 
   const THEMES = {
-    bunker: { primary: "#00E5FF", secondary: "#00E676", bg1: "#080c14", bg2: "#0d1624" },
-    frost: { primary: "#80D8FF", secondary: "#E0F7FA", bg1: "#0a101d", bg2: "#141e33" },
-    solafite: { primary: "#FFD700", secondary: "#FF9100", bg1: "#120e06", bg2: "#221908" },
-    toxic: { primary: "#00E676", secondary: "#76FF03", bg1: "#06120a", bg2: "#0d2214" }
+    chrome: { primary: "#FFFFFF", accent: "#E2E8F0", glow: "rgba(255, 255, 255, 0.45)" },
+    bunker: { primary: "#00E5FF", accent: "#38BDF8", glow: "rgba(0, 229, 255, 0.5)" },
+    frost: { primary: "#80D8FF", accent: "#BAE6FD", glow: "rgba(128, 216, 255, 0.5)" },
+    solafite: { primary: "#FFD700", accent: "#FDE047", glow: "rgba(255, 215, 0, 0.5)" },
+    toxic: { primary: "#00E676", accent: "#4ADE80", glow: "rgba(0, 230, 118, 0.5)" }
   };
-  const t = THEMES[theme] || THEMES.bunker;
+  const t = THEMES[theme] || THEMES.chrome;
 
-  // Background Gradient
-  const grad = ctx.createLinearGradient(0, 0, width, height);
-  grad.addColorStop(0, t.bg1);
-  grad.addColorStop(0.5, t.bg2);
-  grad.addColorStop(1, t.bg1);
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, width, height);
+  // 1. Black & Chrome Metallic Template Background (1024x460)
+  if (bgImg) {
+    ctx.drawImage(bgImg, 0, 0, width, height);
+  } else {
+    const fallbackGrad = ctx.createLinearGradient(0, 0, width, height);
+    fallbackGrad.addColorStop(0, "#050507");
+    fallbackGrad.addColorStop(0.5, "#0d0e14");
+    fallbackGrad.addColorStop(1, "#050507");
+    ctx.fillStyle = fallbackGrad;
+    ctx.fillRect(0, 0, width, height);
+  }
 
-  drawTechGrid(ctx, width, height, 40, "rgba(255, 255, 255, 0.03)");
-  drawHudFrame(ctx, 18, 18, width - 36, height - 36, t.primary, 16);
+  // 2. Left Circular Avatar + Metallic Star-Compass Frame Overlay
+  const avCX = 194;
+  const avCY = 242;
+  const frameW = 282;
+  const frameH = frameImg ? Math.round(frameW * (frameImg.height / frameImg.width)) : 278;
+  const avR = 92;
 
-  // Top Header
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(avCX, avCY, avR, 0, Math.PI * 2);
+  ctx.closePath();
+  ctx.clip();
+
+  if (avatarImg) {
+    ctx.drawImage(avatarImg, avCX - avR, avCY - avR, avR * 2, avR * 2);
+  } else {
+    drawFallbackAvatar(ctx, avCX, avCY, avR, "#E2E8F0");
+  }
+
+  // Subtle dark inner vignette so photo blends seamlessly into the chrome bezel
+  const innerShade = ctx.createRadialGradient(avCX, avCY, avR * 0.65, avCX, avCY, avR);
+  innerShade.addColorStop(0, "rgba(0, 0, 0, 0)");
+  innerShade.addColorStop(1, "rgba(0, 0, 0, 0.38)");
+  ctx.fillStyle = innerShade;
+  ctx.fillRect(avCX - avR, avCY - avR, avR * 2, avR * 2);
+  ctx.restore();
+
+  // Frame with Theme Accent Glow
+  if (frameImg) {
+    ctx.save();
+    ctx.shadowColor = t.glow;
+    ctx.shadowBlur = 16;
+    ctx.drawImage(frameImg, avCX - frameW / 2, avCY - frameH / 2, frameW, frameH);
+    ctx.restore();
+  }
+
+  // 3. Right Chrome Hexagonal Main Panel (centered at x = 652)
+  const hexCX = 652;
+  ctx.save();
+  ctx.textAlign = "center";
+
+  // Top sub-label
+  ctx.fillStyle = t.accent;
+  ctx.font = "bold 10px Segoe UI, sans-serif";
+  ctx.fillText("HOLLOWBORN // TACTICAL SURVIVOR ID", hexCX, 190);
+
+  // Member Display Name
+  const fallbackUser = sanitizeCanvasText(member.user.username, "Recruit");
+  const rawName = member.displayName || member.user.username;
+  const cleanName = sanitizeCanvasText(rawName, fallbackUser);
+  const displayName = cleanName.length > 24 ? cleanName.slice(0, 22) + "..." : cleanName;
+  const nameFontSize = displayName.length > 18 ? 24 : displayName.length > 12 ? 28 : 32;
+
   ctx.fillStyle = "#FFFFFF";
-  ctx.font = "bold 20px Segoe UI, sans-serif";
-  ctx.fillText("HOLLOWBORN // SURVIVOR OPERATIVE ID", 36, 54);
+  ctx.shadowColor = t.glow;
+  ctx.shadowBlur = 10;
+  ctx.font = `bold ${nameFontSize}px Segoe UI, sans-serif`;
+  ctx.fillText(displayName, hexCX, 224, 380);
+  ctx.shadowBlur = 0;
 
-  ctx.fillStyle = t.primary;
-  ctx.font = "600 11px Segoe UI, sans-serif";
-  ctx.fillText("TACTICAL PERSONNEL CLEARANCE & MISSION PROFILE", 36, 72);
-
-  // Barcode Top Right
-  drawBarcode(ctx, width - 180, 40, 140, 22, "rgba(255, 255, 255, 0.3)");
-
-  // Left Column: Avatar & Class Role
-  const avCX = 140;
-  const avCY = 210;
-  const avR = 75;
-
-  drawCircularAvatar(ctx, avatarImg, avCX, avCY, avR, t.primary);
-
-  // Highest Role Badge below avatar
+  // Handle & Highest Role
+  const cleanHandle = sanitizeCanvasText((member.user.username || member.user.tag || "operative").replace(/#0$/, ""), "operative");
   const primaryRole = member.roles.highest ? member.roles.highest.name : "Operative";
   let cleanRole = sanitizeCanvasText(primaryRole, "Operative");
-  if (cleanRole === "@everyone" || !cleanRole) cleanRole = "Survivor Recruit";
+  if (cleanRole === "@everyone" || !cleanRole) cleanRole = "SURVIVOR RECRUIT";
 
-  ctx.fillStyle = t.primary;
-  ctx.beginPath();
-  ctx.roundRect(avCX - 85, avCY + avR + 15, 170, 26, 6);
-  ctx.fill();
+  ctx.fillStyle = "#CBD5E1";
+  ctx.font = "600 12px Segoe UI, sans-serif";
+  ctx.fillText(`@${cleanHandle} • ${cleanRole.toUpperCase()} • CLEARANCE LEVEL-1`, hexCX, 247, 380);
+  ctx.restore();
 
-  ctx.fillStyle = "#05070d";
-  ctx.font = "bold 11px Segoe UI, sans-serif";
-  ctx.textAlign = "center";
-  ctx.fillText(cleanRole.toUpperCase().slice(0, 24), avCX, avCY + avR + 32);
+  // 4. Lower Pill Bar (midY = 322, text starts at x = 512, ends <= 890)
+  const pillStart = 512;
+  const pillY = 322;
+  ctx.save();
   ctx.textAlign = "start";
 
-  // Center/Right Information Block
-  const infoX = 260;
-  const infoY = 110;
-  const infoW = width - infoX - 36;
-
-  // Name & Discriminator
-  const rawName = member.displayName || member.user.username;
-  const cleanName = sanitizeCanvasText(rawName, member.user.username || "Operative");
-  const nameText = cleanName.length > 20 ? cleanName.slice(0, 18) + "..." : cleanName;
-  ctx.fillStyle = "#FFFFFF";
-  ctx.font = "bold 30px Segoe UI, sans-serif";
-  ctx.fillText(nameText, infoX, infoY + 28);
-
-  const cleanTag = sanitizeCanvasText(member.user.tag, member.user.username || "user");
-  ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
-  ctx.font = "500 13px Segoe UI, sans-serif";
-  ctx.fillText("@" + cleanTag + " • Terdaftar sejak " + (member.joinedAt ? member.joinedAt.toLocaleDateString("id-ID") : "Baru Saja"), infoX, infoY + 52);
-
-  // 3 Metric Stat Boxes
-  const statBoxY = infoY + 75;
-  const statBoxH = 90;
-  const statBoxW = (infoW - 20) / 3;
-
-  const metrics = [
-    { label: "ROADMAP PROGRES", value: `${stats.completedRoadmap || 0}/7`, sub: "Gua/Bunker Selesai" },
-    { label: "MARKAS TERDAFTAR", value: `${stats.registeredBases || 0}`, sub: "Base & Marker Tim" },
-    { label: "EKSPEDISI MABAR", value: `${stats.mabarJoined || 0}`, sub: "Sesi Diikuti" }
+  const statsParts = [
+    { label: "SKOR: ", val: `${stats.score || 0} PTS` },
+    { sep: "   •   " },
+    { label: "ROADMAP: ", val: `${stats.completedRoadmap || 0}/7` },
+    { sep: "   •   " },
+    { label: "BASE: ", val: `${stats.registeredBases || 0}` },
+    { sep: "   •   " },
+    { label: "MABAR: ", val: `${stats.mabarJoined || 0}X` }
   ];
 
-  metrics.forEach((m, idx) => {
-    const sx = infoX + idx * (statBoxW + 10);
-    ctx.fillStyle = "rgba(18, 26, 42, 0.75)";
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.1)";
-    ctx.lineWidth = 1.2;
-    ctx.beginPath();
-    ctx.roundRect(sx, statBoxY, statBoxW, statBoxH, 8);
-    ctx.fill();
-    ctx.stroke();
+  let curX = pillStart;
+  for (const p of statsParts) {
+    if (p.sep) {
+      ctx.fillStyle = "#71717A";
+      ctx.font = "500 11px Segoe UI, sans-serif";
+      ctx.fillText(p.sep, curX, pillY);
+      curX += ctx.measureText(p.sep).width;
+    } else {
+      ctx.fillStyle = "#A1A1AA";
+      ctx.font = "bold 10px Segoe UI, sans-serif";
+      ctx.fillText(p.label, curX, pillY);
+      curX += ctx.measureText(p.label).width;
 
-    ctx.fillStyle = "rgba(255, 255, 255, 0.55)";
-    ctx.font = "bold 10px Segoe UI, sans-serif";
-    ctx.fillText(m.label, sx + 14, statBoxY + 24);
-
-    ctx.fillStyle = t.primary;
-    ctx.font = "bold 26px Segoe UI, sans-serif";
-    ctx.fillText(m.value, sx + 14, statBoxY + 56);
-
-    ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
-    ctx.font = "10px Segoe UI, sans-serif";
-    ctx.fillText(m.sub, sx + 14, statBoxY + 76);
-  });
-
-  // Survival Badges Lower Row
-  const badgeY = statBoxY + statBoxH + 20;
-  ctx.fillStyle = "#FFFFFF";
-  ctx.font = "bold 12px Segoe UI, sans-serif";
-  ctx.fillText("LENCANA SURVIVAL OPERATIVE:", infoX, badgeY + 16);
-
-  const badges = [
-    { name: "RECRUIT READY", unlocked: true },
-    { name: "KEYCARD SPECIALIST", unlocked: (stats.completedRoadmap || 0) >= 4 },
-    { name: "ISLAND ARCHITECT", unlocked: (stats.registeredBases || 0) >= 1 },
-    { name: "ENDGAME VETERAN", unlocked: (stats.completedRoadmap || 0) >= 7 }
-  ];
-
-  let bX = infoX;
-  badges.forEach(b => {
-    ctx.font = "bold 10px Segoe UI, sans-serif";
-    const bW = ctx.measureText(b.name).width + 24;
-    ctx.fillStyle = b.unlocked ? "rgba(0, 230, 118, 0.15)" : "rgba(255, 255, 255, 0.05)";
-    ctx.strokeStyle = b.unlocked ? "#00E676" : "rgba(255, 255, 255, 0.15)";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.roundRect(bX, badgeY + 28, bW, 24, 12);
-    ctx.fill();
-    ctx.stroke();
-
-    ctx.fillStyle = b.unlocked ? "#00E676" : "rgba(255, 255, 255, 0.35)";
-    ctx.fillText(b.name, bX + 12, badgeY + 44);
-    bX += bW + 8;
-  });
-
-  // Footer Tagline
-  ctx.fillStyle = "rgba(255, 255, 255, 0.35)";
-  ctx.font = "500 11px Segoe UI, sans-serif";
-  ctx.fillText("HOLLOWBORN TACTICAL NETWORK • SOTF SURVIVOR REGISTRY #SITE-2", 36, height - 26);
+      ctx.fillStyle = t.primary;
+      ctx.font = "bold 11px Segoe UI, sans-serif";
+      ctx.fillText(p.val, curX, pillY);
+      curX += ctx.measureText(p.val).width;
+    }
+  }
+  ctx.restore();
 
   return canvas.toBuffer("image/png");
 }
@@ -1122,139 +1113,191 @@ async function generateIslandRadarCanvas(bases = [], filterMode = "all", progres
 
 async function generateMabarTicketCanvas(session, attendeeUsers = []) {
   const width = 1040;
-  const height = 360;
+  const height = 390;
   const canvas = createCanvas(width, height);
   const ctx = canvas.getContext("2d");
 
-  // Load attendee avatars (up to 8)
-  const loadedAvatars = [];
-  for (const u of attendeeUsers.slice(0, 8)) {
-    if (u && typeof u.displayAvatarURL === "function") {
-      const img = await safeLoadAvatar(u.displayAvatarURL({ extension: "png", size: 128 }));
-      const cleanAttName = sanitizeCanvasText(u.displayName || u.username, "Survivor");
-      loadedAvatars.push({ img, name: cleanAttName });
-    }
-  }
+  // Load attendee avatars (up to 8) and frame asset
+  const [frameImg, ...loadedAvatars] = await Promise.all([
+    getWelcomeFrameImage(),
+    ...attendeeUsers.slice(0, 8).map(async u => {
+      if (u && typeof u.displayAvatarURL === "function") {
+        const img = await safeLoadAvatar(u.displayAvatarURL({ extension: "png", size: 128 }));
+        const cleanAttName = sanitizeCanvasText(u.displayName || u.username, "Survivor");
+        return { img, name: cleanAttName };
+      }
+      return null;
+    })
+  ]);
 
-  // Dark Stealth Background
-  const grad = ctx.createLinearGradient(0, 0, width, height);
-  grad.addColorStop(0, "#080b12");
-  grad.addColorStop(0.5, "#0e1524");
-  grad.addColorStop(1, "#06080f");
-  ctx.fillStyle = grad;
+  const validAvatars = loadedAvatars.filter(Boolean);
+
+  // 1. Deep Black Metallic Background with Subtle Chrome Sheen
+  const bgGrad = ctx.createLinearGradient(0, 0, width, height);
+  bgGrad.addColorStop(0, "#050507");
+  bgGrad.addColorStop(0.5, "#0d0e15");
+  bgGrad.addColorStop(1, "#050507");
+  ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, width, height);
 
-  drawTechGrid(ctx, width, height, 40, "rgba(0, 229, 255, 0.04)");
-  drawHudFrame(ctx, 16, 16, width - 32, height - 32, "#00E5FF", 14);
+  // Subtle chrome light wave on top & bottom
+  const topGlow = ctx.createRadialGradient(width / 2, 0, 10, width / 2, 0, 420);
+  topGlow.addColorStop(0, "rgba(255, 255, 255, 0.12)");
+  topGlow.addColorStop(1, "rgba(255, 255, 255, 0)");
+  ctx.fillStyle = topGlow;
+  ctx.fillRect(0, 0, width, 130);
 
-  // Left Stub Barcode & Pass Identifier
-  const stubW = 120;
-  ctx.fillStyle = "rgba(0, 229, 255, 0.06)";
-  ctx.fillRect(18, 18, stubW, height - 36);
+  // 2. Chrome Metallic Borders & Corner Crosshairs
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.22)";
+  ctx.lineWidth = 1.2;
+  ctx.strokeRect(18, 18, width - 36, height - 36);
 
-  ctx.strokeStyle = "rgba(0, 229, 255, 0.25)";
-  ctx.lineWidth = 1.5;
-  ctx.setLineDash([6, 6]);
-  ctx.beginPath();
-  ctx.moveTo(18 + stubW, 18);
-  ctx.lineTo(18 + stubW, height - 18);
-  ctx.stroke();
-  ctx.setLineDash([]); // Reset dash
+  const drawCornerCrosshair = (cx, cy) => {
+    ctx.strokeStyle = "#FFFFFF";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(cx - 8, cy); ctx.lineTo(cx + 8, cy);
+    ctx.moveTo(cx, cy - 8); ctx.lineTo(cx, cy + 8);
+    ctx.stroke();
+  };
+  drawCornerCrosshair(28, 28);
+  drawCornerCrosshair(width - 28, 28);
+  drawCornerCrosshair(28, height - 28);
+  drawCornerCrosshair(width - 28, height - 28);
 
-  // Stub Text (Vertical Oriented)
-  ctx.save();
-  ctx.translate(50, height / 2 + 50);
-  ctx.rotate(-Math.PI / 2);
-  ctx.fillStyle = "#00E5FF";
-  ctx.font = "bold 13px Segoe UI, sans-serif";
-  ctx.fillText("MISSION BOARDING PASS", 0, 0);
-  ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
-  ctx.font = "10px Segoe UI, sans-serif";
-  ctx.fillText("HOLLOWBORN EXPEDITION SQUAD", 0, 16);
-  ctx.restore();
-
-  drawBarcode(ctx, 80, 40, 30, height - 80, "rgba(0, 229, 255, 0.4)");
-
-  // Main Ticket Content
-  const mainX = 18 + stubW + 24;
-
-  // Header
+  // 3. Top Header
+  ctx.textAlign = "start";
   ctx.fillStyle = "#FFFFFF";
   ctx.font = "bold 22px Segoe UI, sans-serif";
-  const gameTitle = (session.game || "Sons of the Forest").toUpperCase();
-  ctx.fillText(gameTitle, mainX, 58);
+  ctx.shadowColor = "rgba(255, 255, 255, 0.35)";
+  ctx.shadowBlur = 8;
+  ctx.fillText("HOLLOWBORN // TACTICAL EXPEDITION PASS", 48, 56);
+  ctx.shadowBlur = 0;
 
-  ctx.fillStyle = "#00E5FF";
-  ctx.font = "600 12px Segoe UI, sans-serif";
-  ctx.fillText("TARGET EKSPEDISI // SQUAD RECRUITMENT ACTIVE", mainX, 78);
+  ctx.fillStyle = "#94A3B8";
+  ctx.font = "600 11px Segoe UI, sans-serif";
+  ctx.fillText("BORN FROM NOTHING. UNITED AS ONE. • SQUAD BOARDING TICKET", 48, 74);
 
-  // Time & Objective Badges (balanced across 1040px width)
-  const timeStr = session.rawTime || "SEGERA";
-  const badgeW = 390;
-  const badgeH = 48;
-  const gap = 20;
+  // Barcode Top Right
+  drawBarcode(ctx, width - 210, 38, 160, 24, "rgba(255, 255, 255, 0.35)");
 
-  ctx.fillStyle = "rgba(255, 215, 0, 0.15)";
-  ctx.strokeStyle = "#FFD700";
-  ctx.lineWidth = 1.5;
+  // 4. Two Metallic Info Boxes
+  const boxY = 96;
+  const boxH = 76;
+  const boxW = 460;
+
+  // Box 1: Game & Departure Time
+  const gradBox1 = ctx.createLinearGradient(48, boxY, 48 + boxW, boxY + boxH);
+  gradBox1.addColorStop(0, "rgba(255, 255, 255, 0.07)");
+  gradBox1.addColorStop(1, "rgba(255, 255, 255, 0.02)");
+  ctx.fillStyle = gradBox1;
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.25)";
+  ctx.lineWidth = 1.2;
   ctx.beginPath();
-  ctx.roundRect(mainX, 100, badgeW, badgeH, 8);
+  ctx.roundRect(48, boxY, boxW, boxH, 8);
   ctx.fill();
   ctx.stroke();
 
-  ctx.fillStyle = "rgba(255, 215, 0, 0.75)";
+  ctx.fillStyle = "#94A3B8";
   ctx.font = "bold 10px Segoe UI, sans-serif";
-  ctx.fillText("WAKTU KEBERANGKATAN:", mainX + 16, 120);
-  ctx.fillStyle = "#FFD700";
-  ctx.font = "bold 18px Segoe UI, sans-serif";
-  ctx.fillText(timeStr, mainX + 16, 140);
+  ctx.fillText("TARGET GAME // MISI EKSPEDISI:", 68, boxY + 24);
 
-  // Host Info
-  const rawHost = session.hostTag ? session.hostTag.split("#")[0] : "Commander";
-  const hostName = sanitizeCanvasText(rawHost, "Commander");
-  const hostX = mainX + badgeW + gap;
-  ctx.fillStyle = "rgba(0, 229, 255, 0.15)";
-  ctx.strokeStyle = "#00E5FF";
-  ctx.beginPath();
-  ctx.roundRect(hostX, 100, badgeW, badgeH, 8);
-  ctx.fill();
-  ctx.stroke();
-
-  ctx.fillStyle = "rgba(0, 229, 255, 0.75)";
-  ctx.font = "bold 10px Segoe UI, sans-serif";
-  ctx.fillText("MISSION HOST:", hostX + 16, 120);
+  const gameTitle = sanitizeCanvasText((session.game || "Sons of The Forest").toUpperCase(), "SONS OF THE FOREST");
   ctx.fillStyle = "#FFFFFF";
-  ctx.font = "bold 18px Segoe UI, sans-serif";
-  ctx.fillText(hostName, hostX + 16, 140);
+  ctx.font = "bold 20px Segoe UI, sans-serif";
+  ctx.fillText(gameTitle.length > 24 ? gameTitle.slice(0, 22) + "..." : gameTitle, 68, boxY + 48);
 
-  // Squad Attendee Slots Visualizer (centered nicely with safe margins)
+  const timeStr = session.rawTime || "SEGERA";
+  ctx.fillStyle = "#E2E8F0";
+  ctx.font = "600 11.5px Segoe UI, sans-serif";
+  ctx.fillText(`⏱️ Waktu: ${timeStr}`, 68, boxY + 66);
+
+  // Box 2: Host Operative & Mission Note
+  const hostBoxX = width - 48 - boxW;
+  const gradBox2 = ctx.createLinearGradient(hostBoxX, boxY, hostBoxX + boxW, boxY + boxH);
+  gradBox2.addColorStop(0, "rgba(255, 255, 255, 0.07)");
+  gradBox2.addColorStop(1, "rgba(255, 255, 255, 0.02)");
+  ctx.fillStyle = gradBox2;
+  ctx.beginPath();
+  ctx.roundRect(hostBoxX, boxY, boxW, boxH, 8);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = "#94A3B8";
+  ctx.font = "bold 10px Segoe UI, sans-serif";
+  ctx.fillText("EXPEDITION LEADER // HOST:", hostBoxX + 20, boxY + 24);
+
+  const rawHost = session.hostTag ? session.hostTag.split("#")[0] : "Operative Host";
+  const cleanHost = sanitizeCanvasText(rawHost, "Operative Host");
+  ctx.fillStyle = "#FFFFFF";
+  ctx.font = "bold 20px Segoe UI, sans-serif";
+  ctx.fillText(cleanHost.length > 24 ? cleanHost.slice(0, 22) + "..." : cleanHost, hostBoxX + 20, boxY + 48);
+
+  const noteStr = session.note ? `📝 ${session.note}` : "STATUS: RECRUITMENT OPEN • TARGET: SITE-2";
+  const cleanNote = sanitizeCanvasText(noteStr, "STATUS: RECRUITMENT OPEN");
+  ctx.fillStyle = "#CBD5E1";
+  ctx.font = "600 11.5px Segoe UI, sans-serif";
+  ctx.fillText(cleanNote.length > 38 ? cleanNote.slice(0, 36) + "..." : cleanNote, hostBoxX + 20, boxY + 66);
+
+  // 5. Squad Attendees Slots Section
+  const slotSectionY = 200;
+  const attCount = session.attendees ? session.attendees.size : validAvatars.length;
   ctx.fillStyle = "#CBD5E1";
   ctx.font = "bold 12px Segoe UI, sans-serif";
-  ctx.fillText(`SQUAD SLOTS (${session.attendees.size} SURVIVOR BERGABUNG):`, mainX, 185);
+  ctx.fillText(`SQUAD ATTENDEES (${attCount} / 8 OPERATIVE TERKONFIRMASI):`, 48, slotSectionY);
 
-  const slotStartX = mainX + 45;
-  const slotY = 235;
-  const slotSpacing = 105;
+  const slotStartX = 92;
+  const slotY = 260;
+  const slotSpacing = 122;
   const totalSlots = 8;
 
   for (let i = 0; i < totalSlots; i++) {
     const sx = slotStartX + i * slotSpacing;
-    const attendee = loadedAvatars[i];
+    const att = validAvatars[i];
 
-    if (attendee) {
-      // Draw actual avatar
-      drawCircularAvatar(ctx, attendee.img, sx, slotY, 26, "#00E676");
+    if (att && att.img) {
+      // 1. Clipped circular avatar
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(sx, slotY, 26, 0, Math.PI * 2);
+      ctx.closePath();
+      ctx.clip();
+      ctx.drawImage(att.img, sx - 26, slotY - 26, 52, 52);
 
+      // Subtle vignette
+      const avVignette = ctx.createRadialGradient(sx, slotY, 16, sx, slotY, 26);
+      avVignette.addColorStop(0, "rgba(0,0,0,0)");
+      avVignette.addColorStop(1, "rgba(0,0,0,0.35)");
+      ctx.fillStyle = avVignette;
+      ctx.fillRect(sx - 26, slotY - 26, 52, 52);
+      ctx.restore();
+
+      // 2. Mini Chrome Star Frame overlay
+      if (frameImg) {
+        ctx.save();
+        ctx.shadowColor = "rgba(255, 255, 255, 0.25)";
+        ctx.shadowBlur = 8;
+        ctx.drawImage(frameImg, sx - 38, slotY - 38, 76, 76);
+        ctx.restore();
+      } else {
+        ctx.strokeStyle = "#FFFFFF";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(sx, slotY, 26, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      // Attendee Name
       ctx.fillStyle = "#FFFFFF";
-      ctx.font = "bold 9px Segoe UI, sans-serif";
+      ctx.font = "bold 10px Segoe UI, sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText(attendee.name.slice(0, 9), sx, slotY + 42);
+      ctx.fillText(att.name.slice(0, 11), sx, slotY + 46);
       ctx.textAlign = "start";
     } else {
-      // Empty Slot
+      // Empty Slot (Sleek Chrome dashed placeholder)
       ctx.save();
       ctx.strokeStyle = "rgba(255, 255, 255, 0.25)";
-      ctx.lineWidth = 1.5;
+      ctx.lineWidth = 1.2;
       ctx.setLineDash([4, 4]);
       ctx.beginPath();
       ctx.arc(sx, slotY, 26, 0, Math.PI * 2);
@@ -1262,17 +1305,17 @@ async function generateMabarTicketCanvas(session, attendeeUsers = []) {
       ctx.restore();
 
       ctx.fillStyle = "rgba(255, 255, 255, 0.35)";
-      ctx.font = "9px Segoe UI, sans-serif";
+      ctx.font = "bold 10px Segoe UI, sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText(`SLOT ${i + 1}`, sx, slotY + 42);
+      ctx.fillText(`SLOT ${i + 1}`, sx, slotY + 46);
       ctx.textAlign = "start";
     }
   }
 
-  // Footer Instructions
-  ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
-  ctx.font = "11px Segoe UI, sans-serif";
-  ctx.fillText("Klik tombol [Join Mabar] di Discord untuk mengisi slot squad dan ikut ekspedisi!", mainX, height - 28);
+  // 6. Footer Tagline
+  ctx.fillStyle = "#71717A";
+  ctx.font = "500 11px Segoe UI, sans-serif";
+  ctx.fillText("Klik tombol [Hadir] di Discord untuk mengisi slot squad! • HOLLOWBORN TACTICAL NETWORK", 48, height - 24);
 
   return canvas.toBuffer("image/png");
 }

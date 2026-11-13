@@ -7,17 +7,21 @@ const { buildLobbyWelcomeEmbed } = require("../utils/statsHelper");
 module.exports = {
   name: Events.GuildMemberAdd,
   async execute(member) {
-    // 1. Auto-Role
-    try {
-      const role = member.guild.roles.cache.get(AUTO_ROLE_ID) || await member.guild.roles.fetch(AUTO_ROLE_ID);
-      if (!role) {
-        console.warn(`[AutoRole] Role ${AUTO_ROLE_ID} tidak ditemukan di server.`);
-      } else {
-        await member.roles.add(role, "HOLLOWBORN — Auto Role Member Baru");
-        console.log(`[AutoRole] Berhasil memberikan role '${role.name}' kepada member baru: ${member.user.tag}`);
+    // 1. Auto-Role (abaikan akun bot)
+    if (member.user?.bot) {
+      console.log(`[AutoRole] Melewati auto-role untuk akun bot: ${member.user.tag}`);
+    } else {
+      try {
+        const role = member.guild.roles.cache.get(AUTO_ROLE_ID) || await member.guild.roles.fetch(AUTO_ROLE_ID);
+        if (!role) {
+          console.warn(`[AutoRole] Role ${AUTO_ROLE_ID} tidak ditemukan di server.`);
+        } else {
+          await member.roles.add(role, "HOLLOWBORN — Auto Role Member Baru");
+          console.log(`[AutoRole] Berhasil memberikan role '${role.name}' kepada member baru: ${member.user.tag}`);
+        }
+      } catch (error) {
+        console.error(`[AutoRole] Gagal memberikan role ke ${member.user.tag}:`, error.message);
       }
-    } catch (error) {
-      console.error(`[AutoRole] Gagal memberikan role ke ${member.user.tag}:`, error.message);
     }
 
     // 2. Military Welcome Canvas Banner (tanpa embed di welcome channel)

@@ -131,6 +131,19 @@ function parseMabarTime(inputRaw) {
   return null;
 }
 
+function formatMabarTimeDisplay(targetTime) {
+  if (!targetTime) return "SEGERA";
+  const diffMin = Math.round((targetTime.getTime() - Date.now()) / 60000);
+  if (diffMin <= 2 && diffMin >= -2) return "SEGERA (NOW)";
+  const hours = String(targetTime.getHours()).padStart(2, "0");
+  const mins = String(targetTime.getMinutes()).padStart(2, "0");
+  const clockStr = `${hours}:${mins} WIB`;
+  if (diffMin > 0 && diffMin <= 120) {
+    return `${clockStr} (${diffMin}m lagi)`;
+  }
+  return clockStr;
+}
+
 function parseQuickMabarText(text) {
   const t = text.trim();
   if (!t) return { type: "PANEL" };
@@ -176,22 +189,21 @@ function buildMabarEmbed(session) {
   const isStarted = Date.now() >= session.targetTime.getTime();
 
   const embed = new EmbedBuilder()
-    .setColor(isStarted ? 0x69F0AE : 0x00E5FF)
-    .setTitle(`🎮 JADWAL MABAR: ${session.game.toUpperCase()}`)
+    .setColor(isStarted ? 0x00E676 : 0xCBD5E1)
+    .setTitle(`🎫 EXPEDITION PASS // ${session.game.toUpperCase()}`)
     .setDescription(
-      `Diinisiasi oleh <@${session.hostId}>\n` +
-      (session.mentionRoleId ? `🔔 Target Notifikasi: <@&${session.mentionRoleId}>\n` : "") +
-      (session.note ? `📝 Catatan: **${session.note}**\n` : "") +
-      `\n⏱️ **Waktu Mulai:** <t:${unix}:F>\n` +
-      `⏳ **Status Waktu:** <t:${unix}:R>\n` +
-      `\n*Klik tombol di bawah untuk konfirmasi kehadiran!*`
+      `**HOST OPERATIVE:** <@${session.hostId}>\n` +
+      (session.mentionRoleId ? `🔔 **TARGET NOTIFIKASI:** <@&${session.mentionRoleId}>\n` : "") +
+      (session.note ? `📝 **CATATAN MISI:** *${session.note}*\n` : "") +
+      `\n⏱️ **WAKTU BERANGKAT:** <t:${unix}:F> (<t:${unix}:R>)\n` +
+      `*Klik tombol di bawah untuk mengisi slot squad & konfirmasi kehadiran!*`
     )
     .addFields(
-      { name: `⚔️ Hadir / Siap (${session.attendees.size})`, value: attendeesList, inline: false },
-      { name: `⏳ Telat / Menyusul (${session.late.size})`, value: lateList, inline: true },
-      { name: `❌ Berhalangan (${session.declined.size})`, value: declinedList, inline: true }
+      { name: `⚔️ Squad Siap (${session.attendees.size}/8)`, value: attendeesList, inline: false },
+      { name: `⏳ Menyusul (${session.late.size})`, value: lateList, inline: true },
+      { name: `❌ Skip / Berhalangan (${session.declined.size})`, value: declinedList, inline: true }
     )
-    .setFooter({ text: "HOLLOWBORN Gaming Division • Born in the Dark." })
+    .setFooter({ text: "HOLLOWBORN • BORN FROM NOTHING. UNITED AS ONE." })
     .setTimestamp(session.targetTime);
 
   return embed;
@@ -201,7 +213,7 @@ function buildMabarButtons(session) {
   return new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId("mabar_join")
-      .setLabel(`Hadir (${session.attendees.size})`)
+      .setLabel(`Hadir (${session.attendees.size}/8)`)
       .setEmoji("⚔️")
       .setStyle(ButtonStyle.Success),
     new ButtonBuilder()
@@ -218,6 +230,10 @@ function buildMabarButtons(session) {
 }
 
 async function buildMabarPayload(session, discordClient) {
+  if (!session.rawTime && session.targetTime) {
+    session.rawTime = formatMabarTimeDisplay(session.targetTime);
+  }
+
   const embed = buildMabarEmbed(session);
   const buttons = buildMabarButtons(session);
 
@@ -292,6 +308,7 @@ module.exports = {
   buildQuickMabarGamePanel,
   buildQuickMabarTimePanel,
   parseMabarTime,
+  formatMabarTimeDisplay,
   parseQuickMabarText,
   buildMabarEmbed,
   buildMabarButtons,

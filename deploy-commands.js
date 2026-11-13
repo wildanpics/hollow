@@ -123,7 +123,15 @@ const commands = [
   new SlashCommandBuilder()
     .setName("profile")
     .setDescription("Lihat kartu identitas survivor taktikal (PuffCorp ID) dengan Canvas.")
-    .addUserOption(o => o.setName("member").setDescription("Pilih anggota yang ingin dicek profilnya (opsional)").setRequired(false)),
+    .addUserOption(o => o.setName("member").setDescription("Pilih anggota yang ingin dicek profilnya (opsional)").setRequired(false))
+    .addStringOption(o => o.setName("tema").setDescription("Pilih tema visual kartu identitas (opsional)").setRequired(false)
+      .addChoices(
+        { name: "⚔️ Hollow Chrome (Default)", value: "chrome" },
+        { name: "🎛️ Bunker Cyan", value: "bunker" },
+        { name: "❄️ Frost Peak", value: "frost" },
+        { name: "👑 Solafite Gold", value: "solafite" },
+        { name: "☣️ Toxic Green", value: "toxic" }
+      )),
 
   new SlashCommandBuilder()
     .setName("map")
@@ -132,7 +140,19 @@ const commands = [
       .addChoices(
         { name: "Semua Titik (Markas + Gua Cerita)", value: "all" },
         { name: "Hanya Markas Tim HOLLOWBORN", value: "bases" },
-        { name: "Hanya Gua Utama & Pintu Emas", value: "story" }
+        { name: "Hanya Gua Utama & Pintu Emas", value: "story" },
+        { name: "Keycard & Fasilitas Bunker", value: "keycard" },
+        { name: "Crash Sites & Helipad", value: "crash" },
+        { name: "Tambang Solafite", value: "solafite" }
+      ))
+    .addStringOption(o => o.setName("sector").setDescription("Zoom sektor wilayah pulau").setRequired(false)
+      .addChoices(
+        { name: "🗺️ Full Island", value: "full" },
+        { name: "🌊 Pantai Utara (Rebreather)", value: "utara" },
+        { name: "🌲 Hutan & Danau Barat (Rope Gun)", value: "barat" },
+        { name: "🏔️ Pegunungan Salju (Shovel)", value: "gunung" },
+        { name: "⛳ Lapangan Golf & Timur (Katana)", value: "timur" },
+        { name: "🌋 Tebing Selatan (Golden Door)", value: "selatan" }
       )),
 
   new SlashCommandBuilder()
