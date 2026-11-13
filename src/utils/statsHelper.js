@@ -44,10 +44,15 @@ function computeSurvivorStats(user, guild) {
 
   let registeredBases = 0;
   bases.forEach(b => {
+    const creator = (b.addedBy || b.createdBy || b.author || "").toLowerCase();
+    const tag = (user.tag || "").toLowerCase();
+    const uname = (user.username || "").toLowerCase();
     if (
       b.createdBy === user.id ||
-      b.createdBy === user.tag ||
-      b.author === user.tag
+      b.addedBy === user.id ||
+      (tag && creator === tag) ||
+      (uname && creator === uname) ||
+      (uname && creator.startsWith(uname))
     ) {
       registeredBases++;
     }
@@ -64,8 +69,16 @@ function computeSurvivorStats(user, guild) {
   return { completedRoadmap, registeredBases, mabarJoined, score };
 }
 
-function computeAllSurvivorLeaderboard(guild) {
-  const members = guild.members.cache;
+async function computeAllSurvivorLeaderboard(guild) {
+  let members = guild.members.cache;
+  if (members.size <= 2) {
+    try {
+      members = await guild.members.fetch();
+    } catch {
+      // fallback to cache
+    }
+  }
+
   const list = [];
   members.forEach(m => {
     if (m.user.bot) return;
@@ -322,22 +335,25 @@ function buildLoadoutMessage(member) {
 }
 
 async function buildLeaderboardMessage(guild) {
-  const topSurvivors = computeAllSurvivorLeaderboard(guild);
+  const allSurvivors = await computeAllSurvivorLeaderboard(guild);
+  const activeSurvivors = allSurvivors.filter(s => s.score > 0);
+  const topSurvivors = activeSurvivors.length > 0 ? activeSurvivors : allSurvivors.slice(0, 8);
+
   const buffer = await generateLeaderboardCanvas(guild, topSurvivors);
   const attachment = new AttachmentBuilder(buffer, { name: "hall-of-fame.png" });
 
   let textRanks = "";
-  if (topSurvivors.length === 0) {
+  if (activeSurvivors.length === 0) {
     textRanks = "_Belum ada kontribusi survivor tercatat. Selesaikan tahap roadmap, daftarkan base, atau ikut mabar!_\n";
   } else {
-    topSurvivors.slice(0, 5).forEach((s, idx) => {
+    activeSurvivors.slice(0, 5).forEach((s, idx) => {
       const medals = ["🥇", "🥈", "🥉", "🎖️", "🎖️"];
       textRanks += `${medals[idx] || "•"} **#${idx + 1} ${s.displayName}** — \`${s.score} Poin\` (Roadmap: ${s.stats.completedRoadmap}/7 • Base: ${s.stats.registeredBases} • Mabar: ${s.stats.mabarJoined})\n`;
     });
   }
 
   const embed = new EmbedBuilder()
-    .setColor(0xFFD700)
+    .setColor(0xCBD5E1)
     .setTitle("🏆 HOLLOWBORN — EXPEDITION HALL OF FAME")
     .setDescription(
       `**Papan Peringkat Operative Paling Berjasa di Pulau SOTF:**\n\n` +
@@ -348,7 +364,7 @@ async function buildLeaderboardMessage(guild) {
       `• Ikuti Ekspedisi Mabar (\`/mabar\`): **+15 Poin**`
     )
     .setImage("attachment://hall-of-fame.png")
-    .setFooter({ text: "Terus berkontribusi untuk menaikkan peringkatmu di Hall of Fame!" })
+    .setFooter({ text: "HOLLOWBORN • BORN FROM NOTHING. UNITED AS ONE." })
     .setTimestamp();
 
   return { embed, files: [attachment] };

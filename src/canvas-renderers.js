@@ -1439,125 +1439,187 @@ function generateLoadoutCanvas(member, loadout = {}) {
 // ==========================================
 
 async function generateLeaderboardCanvas(guild, topMembers = []) {
-  const width = 940;
+  const width = 1024;
   const height = 540;
   const canvas = createCanvas(width, height);
   const ctx = canvas.getContext("2d");
 
-  // Load Top 3 Avatars
-  const topAvatars = [];
-  for (const m of topMembers.slice(0, 3)) {
-    if (m && m.user) {
-      const img = await safeLoadAvatar(m.user.displayAvatarURL({ extension: "png", size: 128 }));
-      const cleanLbName = sanitizeCanvasText(m.displayName || m.user.username, "Operative");
-      topAvatars.push({ img, name: cleanLbName, score: m.score || 0 });
-    }
-  }
+  // Load Frame asset and Top 3 Avatars
+  const [frameImg, ...topAvatars] = await Promise.all([
+    getWelcomeFrameImage(),
+    ...topMembers.slice(0, 3).map(async m => {
+      if (m && m.user && typeof m.user.displayAvatarURL === "function") {
+        const img = await safeLoadAvatar(m.user.displayAvatarURL({ extension: "png", size: 128 }));
+        const cleanLbName = sanitizeCanvasText(m.displayName || m.user.username, "Operative");
+        return { img, name: cleanLbName, score: m.score || 0 };
+      }
+      return null;
+    })
+  ]);
 
-  // Dark Mainframe Background
-  const grad = ctx.createLinearGradient(0, 0, width, height);
-  grad.addColorStop(0, "#080c14");
-  grad.addColorStop(0.5, "#0e1626");
-  grad.addColorStop(1, "#05070d");
-  ctx.fillStyle = grad;
+  // 1. Deep Black Metallic Background with Subtle Chrome Wave
+  const bgGrad = ctx.createLinearGradient(0, 0, width, height);
+  bgGrad.addColorStop(0, "#050507");
+  bgGrad.addColorStop(0.5, "#0d0e15");
+  bgGrad.addColorStop(1, "#050507");
+  ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, width, height);
 
-  drawTechGrid(ctx, width, height, 40, "rgba(0, 229, 255, 0.04)");
-  drawHudFrame(ctx, 16, 16, width - 32, height - 32, "#FFD700", 16);
+  // Chrome light waves on top
+  const topGlow = ctx.createRadialGradient(width / 2, 0, 10, width / 2, 0, 460);
+  topGlow.addColorStop(0, "rgba(255, 255, 255, 0.12)");
+  topGlow.addColorStop(1, "rgba(255, 255, 255, 0)");
+  ctx.fillStyle = topGlow;
+  ctx.fillRect(0, 0, width, 140);
 
-  // Header
+  // Chrome metallic borders & corner crosshairs
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.22)";
+  ctx.lineWidth = 1.2;
+  ctx.strokeRect(18, 18, width - 36, height - 36);
+
+  const drawCornerCrosshair = (cx, cy) => {
+    ctx.strokeStyle = "#FFFFFF";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(cx - 8, cy); ctx.lineTo(cx + 8, cy);
+    ctx.moveTo(cx, cy - 8); ctx.lineTo(cx, cy + 8);
+    ctx.stroke();
+  };
+  drawCornerCrosshair(28, 28);
+  drawCornerCrosshair(width - 28, 28);
+  drawCornerCrosshair(28, height - 28);
+  drawCornerCrosshair(width - 28, height - 28);
+
+  // 2. Header
+  ctx.textAlign = "start";
   ctx.fillStyle = "#FFFFFF";
   ctx.font = "bold 22px Segoe UI, sans-serif";
-  ctx.fillText("HOLLOWBORN // EXPEDITION HALL OF FAME", 36, 54);
+  ctx.shadowColor = "rgba(255, 255, 255, 0.35)";
+  ctx.shadowBlur = 8;
+  ctx.fillText("HOLLOWBORN // EXPEDITION HALL OF FAME", 48, 56);
+  ctx.shadowBlur = 0;
 
-  ctx.fillStyle = "#FFD700";
-  ctx.font = "600 12px Segoe UI, sans-serif";
-  ctx.fillText("TOP SURVIVOR OPERATIVES • ROADMAP, MARKAS & EKSPEDISI TERBANYAK", 36, 74);
+  ctx.fillStyle = "#94A3B8";
+  ctx.font = "600 11px Segoe UI, sans-serif";
+  ctx.fillText("BORN FROM NOTHING. UNITED AS ONE. • SURVIVOR CONTRIBUTIONS & LEADERBOARD", 48, 74);
 
-  // Top 3 Podium Cards (Rank 2, Rank 1, Rank 3)
+  // Barcode Top Right
+  drawBarcode(ctx, width - 210, 38, 160, 24, "rgba(255, 255, 255, 0.35)");
+
+  // 3. Top 3 Podium (Rank 2 Silver, Rank 1 Gold, Rank 3 Bronze)
   const podiumLayout = [
-    { rank: 2, data: topAvatars[1], x: 190, y: 155, r: 42, color: "#C0C0C0", title: "2ND SILVER" },
-    { rank: 1, data: topAvatars[0], x: 470, y: 135, r: 52, color: "#FFD700", title: "1ST GOLD CHAMPION" },
-    { rank: 3, data: topAvatars[2], x: 750, y: 165, r: 38, color: "#CD7F32", title: "3RD BRONZE" }
+    { rank: 2, data: topAvatars[1], x: 230, y: 175, r: 44, color: "#E2E8F0", glow: "rgba(226, 232, 240, 0.5)", title: "🥈 2ND SILVER" },
+    { rank: 1, data: topAvatars[0], x: 512, y: 155, r: 54, color: "#FFD700", glow: "rgba(255, 215, 0, 0.6)", title: "🥇 1ST GOLD CHAMPION" },
+    { rank: 3, data: topAvatars[2], x: 794, y: 185, r: 40, color: "#F59E0B", glow: "rgba(245, 158, 11, 0.5)", title: "🥉 3RD BRONZE" }
   ];
 
   podiumLayout.forEach(p => {
-    if (p.data) {
-      drawCircularAvatar(ctx, p.data.img, p.x, p.y, p.r, p.color);
-
-      // Rank Badge
-      ctx.fillStyle = p.color;
+    ctx.textAlign = "center";
+    if (p.data && p.data.img) {
+      // Circular avatar
+      ctx.save();
       ctx.beginPath();
-      ctx.roundRect(p.x - 55, p.y + p.r + 10, 110, 20, 10);
-      ctx.fill();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.closePath();
+      ctx.clip();
+      ctx.drawImage(p.data.img, p.x - p.r, p.y - p.r, p.r * 2, p.r * 2);
 
-      ctx.fillStyle = "#05070d";
-      ctx.font = "bold 10px Segoe UI, sans-serif";
-      ctx.textAlign = "center";
-      ctx.fillText(p.title, p.x, p.y + p.r + 24);
+      // Vignette
+      const innerVignette = ctx.createRadialGradient(p.x, p.y, p.r * 0.65, p.x, p.y, p.r);
+      innerVignette.addColorStop(0, "rgba(0,0,0,0)");
+      innerVignette.addColorStop(1, "rgba(0,0,0,0.38)");
+      ctx.fillStyle = innerVignette;
+      ctx.fillRect(p.x - p.r, p.y - p.r, p.r * 2, p.r * 2);
+      ctx.restore();
+
+      // Frame with glow
+      if (frameImg) {
+        const fW = Math.round(p.r * 2.8);
+        const fH = Math.round(fW * (frameImg.height / frameImg.width));
+        ctx.save();
+        ctx.shadowColor = p.glow;
+        ctx.shadowBlur = 14;
+        ctx.drawImage(frameImg, p.x - fW / 2, p.y - fH / 2, fW, fH);
+        ctx.restore();
+      }
+
+      // Rank Title Badge
+      ctx.fillStyle = p.color;
+      ctx.font = "bold 11px Segoe UI, sans-serif";
+      ctx.fillText(p.title, p.x, p.y + p.r + 28);
 
       // Operative Name
       ctx.fillStyle = "#FFFFFF";
-      ctx.font = "bold 14px Segoe UI, sans-serif";
+      ctx.font = "bold 15px Segoe UI, sans-serif";
       ctx.fillText(p.data.name.slice(0, 16), p.x, p.y + p.r + 48);
 
       // Score
-      ctx.fillStyle = p.color;
+      ctx.fillStyle = "#CBD5E1";
       ctx.font = "600 12px Segoe UI, sans-serif";
-      ctx.fillText(`${p.data.score} Poin Kontribusi`, p.x, p.y + p.r + 66);
-      ctx.textAlign = "start";
+      ctx.fillText(`${p.data.score} Pts Kontribusi`, p.x, p.y + p.r + 66);
     } else {
       // Empty Podium Placeholder
       drawFallbackAvatar(ctx, p.x, p.y, p.r, p.color);
+      if (frameImg) {
+        const fW = Math.round(p.r * 2.8);
+        const fH = Math.round(fW * (frameImg.height / frameImg.width));
+        ctx.drawImage(frameImg, p.x - fW / 2, p.y - fH / 2, fW, fH);
+      }
       ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
+      ctx.font = "bold 11px Segoe UI, sans-serif";
+      ctx.fillText(p.title, p.x, p.y + p.r + 28);
       ctx.font = "11px Segoe UI, sans-serif";
-      ctx.textAlign = "center";
-      ctx.fillText(`POSISI #${p.rank}`, p.x, p.y + p.r + 24);
-      ctx.textAlign = "start";
+      ctx.fillText("_Belum Terisi_", p.x, p.y + p.r + 48);
     }
   });
 
-  // Ranks 4 to 10 Table Below
-  const tableY = 320;
-  const tableW = width - 72;
-  ctx.fillStyle = "rgba(16, 23, 38, 0.85)";
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.1)";
-  ctx.lineWidth = 1.2;
+  // 4. Ranks 4 to 8 Table Below
+  const tableY = 325;
+  const tableW = width - 96;
+  const tableH = 155;
+  ctx.fillStyle = "rgba(255, 255, 255, 0.04)";
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
+  ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.roundRect(36, tableY, tableW, 160, 8);
+  ctx.roundRect(48, tableY, tableW, tableH, 8);
   ctx.fill();
   ctx.stroke();
 
-  ctx.fillStyle = "#00E5FF";
-  ctx.font = "bold 12px Segoe UI, sans-serif";
-  ctx.fillText("TOP SURVIVOR PERINGKAT BERIKUTNYA:", 54, tableY + 28);
+  ctx.textAlign = "start";
+  ctx.fillStyle = "#CBD5E1";
+  ctx.font = "bold 11px Segoe UI, sans-serif";
+  ctx.fillText("TOP SURVIVOR PERINGKAT BERIKUTNYA:", 68, tableY + 26);
 
-  const subRanks = topMembers.slice(3, 8);
+  const subRanks = topMembers.slice(3, 9);
   if (subRanks.length === 0) {
     ctx.fillStyle = "rgba(255, 255, 255, 0.45)";
     ctx.font = "12px Segoe UI, sans-serif";
-    ctx.fillText("Belum ada data survivor tambahan. Selesaikan roadmap atau ikuti mabar untuk masuk leaderboard!", 54, tableY + 60);
+    ctx.fillText("Belum ada data survivor tambahan. Selesaikan roadmap atau ikuti mabar untuk masuk leaderboard!", 68, tableY + 60);
   } else {
     subRanks.forEach((m, idx) => {
-      const rx = 54 + (idx % 2) * (tableW / 2 - 20);
-      const ry = tableY + 58 + Math.floor(idx / 2) * 32;
+      const rx = 68 + (idx % 2) * (tableW / 2 - 20);
+      const ry = tableY + 56 + Math.floor(idx / 2) * 36;
 
-      ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+      ctx.fillStyle = "#94A3B8";
+      ctx.font = "bold 11px Segoe UI, sans-serif";
+      ctx.fillText(`#${idx + 4}`, rx, ry);
+
+      ctx.fillStyle = "#FFFFFF";
       ctx.font = "bold 12px Segoe UI, sans-serif";
       const rawName = m.displayName || (m.user ? m.user.username : "Operative");
       const name = sanitizeCanvasText(rawName, "Operative");
-      ctx.fillText(`#${idx + 4}. ${name.slice(0, 18)}`, rx, ry);
+      ctx.fillText(name.slice(0, 16), rx + 30, ry);
 
-      ctx.fillStyle = "#00E676";
-      ctx.font = "500 11px Segoe UI, sans-serif";
-      ctx.fillText(`• ${m.score || 0} Poin`, rx + 180, ry);
+      ctx.fillStyle = "#E2E8F0";
+      ctx.font = "600 11px Segoe UI, sans-serif";
+      ctx.fillText(`• ${m.score || 0} Poin`, rx + 220, ry);
     });
   }
 
-  // Footer Tagline
-  ctx.fillStyle = "rgba(255, 255, 255, 0.35)";
+  // 5. Footer Tagline
+  ctx.fillStyle = "#71717A";
   ctx.font = "500 11px Segoe UI, sans-serif";
-  ctx.fillText("HOLLOWBORN LEADERBOARD • KONTRIBUSI DARI ROADMAP, MARKAS, DAN SESI MABAR", 36, height - 22);
+  ctx.fillText("HOLLOWBORN EXPEDITION LEADERBOARD • BORN FROM NOTHING. UNITED AS ONE.", 48, height - 24);
 
   return canvas.toBuffer("image/png");
 }
