@@ -13,6 +13,12 @@ const { MAP_INTEL } = require("../config/map-intel");
 const { loadRoadmapProgress } = require("../storage/roadmapStorage");
 const { loadBasesData } = require("../storage/baseStorage");
 const { loadUserLoadouts } = require("../storage/loadoutStorage");
+const {
+  getTopVoiceSurvivors,
+  getUserVoiceSeconds,
+  formatVoiceDuration,
+  isUserInVoice
+} = require("../storage/voiceStorage");
 const { mabarSessions } = require("./mabarManager");
 const {
   generateProfileCanvas,
@@ -65,8 +71,12 @@ function computeSurvivorStats(user, guild) {
     }
   }
 
+  const voiceSeconds = getUserVoiceSeconds(user.id);
+  const voiceDisplay = formatVoiceDuration(voiceSeconds);
+  const isLiveVoice = isUserInVoice(user.id);
+
   const score = completedRoadmap * 25 + registeredBases * 20 + mabarJoined * 15;
-  return { completedRoadmap, registeredBases, mabarJoined, score };
+  return { completedRoadmap, registeredBases, mabarJoined, voiceSeconds, voiceDisplay, isLiveVoice, score };
 }
 
 async function computeAllSurvivorLeaderboard(guild) {
@@ -115,6 +125,7 @@ async function buildProfileMessage(member, theme = "chrome") {
     .setDescription(
       `**OPERATIVE:** <@${member.id}> (${member.user.tag})\n` +
       `**STATUS CLEARANCE:** \`LEVEL-1 VERIFIED\` • **TOTAL SKOR:** \`${stats.score} Poin\`\n\n` +
+      `• 🎙️ **Voice Activity:** **${stats.voiceDisplay}**${stats.isLiveVoice ? " *(🟢 Sedang di VC)*" : ""}\n` +
       `• 🗺️ **Roadmap Gua Selesai:** **${stats.completedRoadmap}/7** Tahapan\n` +
       `• 🏰 **Markas Tim Terdaftar:** **${stats.registeredBases}** Base Camp\n` +
       `• 🎮 **Ekspedisi Mabar:** **${stats.mabarJoined}** Sesi Diikuti\n\n` +
@@ -335,35 +346,35 @@ function buildLoadoutMessage(member) {
 }
 
 async function buildLeaderboardMessage(guild) {
-  const allSurvivors = await computeAllSurvivorLeaderboard(guild);
-  const activeSurvivors = allSurvivors.filter(s => s.score > 0);
-  const topSurvivors = activeSurvivors.length > 0 ? activeSurvivors : allSurvivors.slice(0, 8);
+  const topSurvivors = await getTopVoiceSurvivors(guild, 10);
+  const activeVoiceSurvivors = topSurvivors.filter(s => s.totalSeconds > 0);
 
   const buffer = await generateLeaderboardCanvas(guild, topSurvivors);
-  const attachment = new AttachmentBuilder(buffer, { name: "hall-of-fame.png" });
+  const attachment = new AttachmentBuilder(buffer, { name: "voice-hall-of-fame.png" });
 
   let textRanks = "";
-  if (activeSurvivors.length === 0) {
-    textRanks = "_Belum ada kontribusi survivor tercatat. Selesaikan tahap roadmap, daftarkan base, atau ikut mabar!_\n";
+  if (activeVoiceSurvivors.length === 0) {
+    textRanks = "_Belum ada rekaman aktivitas voice. Masuk ke Voice Channel (VC) manapun untuk mulai mengumpulkan jam dan masuk ke Hall of Fame!_\n";
   } else {
-    activeSurvivors.slice(0, 5).forEach((s, idx) => {
-      const medals = ["🥇", "🥈", "🥉", "🎖️", "🎖️"];
-      textRanks += `${medals[idx] || "•"} **#${idx + 1} ${s.displayName}** — \`${s.score} Poin\` (Roadmap: ${s.stats.completedRoadmap}/7 • Base: ${s.stats.registeredBases} • Mabar: ${s.stats.mabarJoined})\n`;
+    topSurvivors.forEach((s, idx) => {
+      const medals = ["🥇", "🥈", "🥉", "🎖️", "🎖️", "🎖️", "🎖️", "🎖️", "🎖️", "🎖️"];
+      const medal = medals[idx] || "•";
+      const liveTag = s.isLive ? " `[🟢 LIVE VC]`" : "";
+      textRanks += `${medal} **#${idx + 1} <@${s.id}>** — \`${s.timeDisplay}\`${liveTag}\n`;
     });
   }
 
   const embed = new EmbedBuilder()
-    .setColor(0xCBD5E1)
-    .setTitle("🏆 HOLLOWBORN — EXPEDITION HALL OF FAME")
+    .setColor(0x38BDF8)
+    .setTitle("🎙️ HOLLOWBORN — TOP 10 VOICE ACTIVITY HALL OF FAME")
     .setDescription(
-      `**Papan Peringkat Operative Paling Berjasa di Pulau SOTF:**\n\n` +
+      `**Papan Peringkat 10 Survivor Paling Aktif di Voice Channel:**\n\n` +
       textRanks +
-      `\n💡 **Cara Mendapatkan Poin Kontribusi:**\n` +
-      `• Centang Tahap Roadmap (\`/roadmap\`): **+25 Poin**\n` +
-      `• Tambah Markas Tim (\`/base add\`): **+20 Poin**\n` +
-      `• Ikuti Ekspedisi Mabar (\`/mabar\`): **+15 Poin**`
+      `\n💡 **Cara Masuk Leaderboard:**\n` +
+      `• Cukup masuk dan aktif di Voice Channel (VC) server Hollowborn saat bermain atau mabar.\n` +
+      `• Bot secara otomatis menghitung durasi Anda secara real-time.`
     )
-    .setImage("attachment://hall-of-fame.png")
+    .setImage("attachment://voice-hall-of-fame.png")
     .setFooter({ text: "HOLLOWBORN • BORN FROM NOTHING. UNITED AS ONE." })
     .setTimestamp();
 

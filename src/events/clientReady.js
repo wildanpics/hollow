@@ -1,6 +1,7 @@
 const { Events, ActivityType } = require("discord.js");
 const { loadRoadmapProgress, syncRoadmapPermanentMessage } = require("../storage/roadmapStorage");
 const { startMabarReminderInterval, loadMabarSessions } = require("../utils/mabarManager");
+const { initVoiceTracking } = require("../storage/voiceStorage");
 
 module.exports = {
   name: Events.ClientReady,
@@ -24,6 +25,9 @@ module.exports = {
 
     // Start mabar reminder loop
     startMabarReminderInterval(client);
+
+    // Initialize Voice Activity Tracking & scan VC
+    initVoiceTracking(client);
   }
 };
 

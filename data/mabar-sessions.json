@@ -1,1 +1,19 @@
-{}
+{
+  "1570649292987703319": {
+    "game": "Sons of The Forest",
+    "note": "Mabar santai HOLLOWBORN",
+    "targetTime": "2026-11-13T14:30:00.000Z",
+    "rawTime": "21:30 WIB",
+    "hostId": "661398044226486292",
+    "hostTag": "ZΞLIX",
+    "channelId": "1567387534407762000",
+    "mentionRoleId": null,
+    "attendees": [
+      "661398044226486292"
+    ],
+    "late": [],
+    "declined": [],
+    "reminded10m": false,
+    "remindedStart": false
+  }
+}

@@ -467,7 +467,7 @@ async function generateProfileCanvas(member, stats = {}, theme = "chrome") {
   ctx.textAlign = "start";
 
   const statsParts = [
-    { label: "SKOR: ", val: `${stats.score || 0} PTS` },
+    { label: "VOICE: ", val: stats.voiceDisplay || "0m" },
     { sep: "   •   " },
     { label: "ROADMAP: ", val: `${stats.completedRoadmap || 0}/7` },
     { sep: "   •   " },
@@ -1440,7 +1440,7 @@ function generateLoadoutCanvas(member, loadout = {}) {
 
 async function generateLeaderboardCanvas(guild, topMembers = []) {
   const width = 1024;
-  const height = 540;
+  const height = 600;
   const canvas = createCanvas(width, height);
   const ctx = canvas.getContext("2d");
 
@@ -1448,12 +1448,20 @@ async function generateLeaderboardCanvas(guild, topMembers = []) {
   const [frameImg, ...topAvatars] = await Promise.all([
     getWelcomeFrameImage(),
     ...topMembers.slice(0, 3).map(async m => {
-      if (m && m.user && typeof m.user.displayAvatarURL === "function") {
-        const img = await safeLoadAvatar(m.user.displayAvatarURL({ extension: "png", size: 128 }));
-        const cleanLbName = sanitizeCanvasText(m.displayName || m.user.username, "Operative");
-        return { img, name: cleanLbName, score: m.score || 0 };
+      if (!m) return null;
+      let img = null;
+      if (m.user && typeof m.user.displayAvatarURL === "function") {
+        img = await safeLoadAvatar(m.user.displayAvatarURL({ extension: "png", size: 128 }));
       }
-      return null;
+      const cleanLbName = sanitizeCanvasText(m.displayName || (m.user ? m.user.username : "Operative"), "Operative");
+      return {
+        img,
+        name: cleanLbName,
+        score: m.totalSeconds || m.score || 0,
+        shortDisplay: m.shortDisplay || "0m",
+        timeDisplay: m.timeDisplay || "0 Menit",
+        isLive: m.isLive || false
+      };
     })
   ]);
 
@@ -1466,11 +1474,11 @@ async function generateLeaderboardCanvas(guild, topMembers = []) {
   ctx.fillRect(0, 0, width, height);
 
   // Chrome light waves on top
-  const topGlow = ctx.createRadialGradient(width / 2, 0, 10, width / 2, 0, 460);
+  const topGlow = ctx.createRadialGradient(width / 2, 0, 10, width / 2, 0, 480);
   topGlow.addColorStop(0, "rgba(255, 255, 255, 0.12)");
   topGlow.addColorStop(1, "rgba(255, 255, 255, 0)");
   ctx.fillStyle = topGlow;
-  ctx.fillRect(0, 0, width, 140);
+  ctx.fillRect(0, 0, width, 150);
 
   // Chrome metallic borders & corner crosshairs
   ctx.strokeStyle = "rgba(255, 255, 255, 0.22)";
@@ -1496,41 +1504,45 @@ async function generateLeaderboardCanvas(guild, topMembers = []) {
   ctx.font = "bold 22px Segoe UI, sans-serif";
   ctx.shadowColor = "rgba(255, 255, 255, 0.35)";
   ctx.shadowBlur = 8;
-  ctx.fillText("HOLLOWBORN // EXPEDITION HALL OF FAME", 48, 56);
+  ctx.fillText("HOLLOWBORN // VOICE ACTIVITY HALL OF FAME", 48, 56);
   ctx.shadowBlur = 0;
 
   ctx.fillStyle = "#94A3B8";
   ctx.font = "600 11px Segoe UI, sans-serif";
-  ctx.fillText("BORN FROM NOTHING. UNITED AS ONE. • SURVIVOR CONTRIBUTIONS & LEADERBOARD", 48, 74);
+  ctx.fillText("BORN FROM NOTHING. UNITED AS ONE. • TOP 10 SURVIVOR VOICE TIME & ACTIVITY", 48, 74);
 
   // Barcode Top Right
   drawBarcode(ctx, width - 210, 38, 160, 24, "rgba(255, 255, 255, 0.35)");
 
   // 3. Top 3 Podium (Rank 2 Silver, Rank 1 Gold, Rank 3 Bronze)
   const podiumLayout = [
-    { rank: 2, data: topAvatars[1], x: 230, y: 175, r: 44, color: "#E2E8F0", glow: "rgba(226, 232, 240, 0.5)", title: "🥈 2ND SILVER" },
-    { rank: 1, data: topAvatars[0], x: 512, y: 155, r: 54, color: "#FFD700", glow: "rgba(255, 215, 0, 0.6)", title: "🥇 1ST GOLD CHAMPION" },
-    { rank: 3, data: topAvatars[2], x: 794, y: 185, r: 40, color: "#F59E0B", glow: "rgba(245, 158, 11, 0.5)", title: "🥉 3RD BRONZE" }
+    { rank: 2, data: topAvatars[1], x: 230, y: 172, r: 44, color: "#E2E8F0", glow: "rgba(226, 232, 240, 0.5)", title: "RANK 2 // SILVER" },
+    { rank: 1, data: topAvatars[0], x: 512, y: 152, r: 54, color: "#FFD700", glow: "rgba(255, 215, 0, 0.6)", title: "RANK 1 // GOLD CHAMPION" },
+    { rank: 3, data: topAvatars[2], x: 794, y: 180, r: 40, color: "#F59E0B", glow: "rgba(245, 158, 11, 0.5)", title: "RANK 3 // BRONZE" }
   ];
 
   podiumLayout.forEach(p => {
     ctx.textAlign = "center";
-    if (p.data && p.data.img) {
-      // Circular avatar
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      ctx.closePath();
-      ctx.clip();
-      ctx.drawImage(p.data.img, p.x - p.r, p.y - p.r, p.r * 2, p.r * 2);
+    if (p.data && (p.data.img || p.data.name)) {
+      if (p.data.img) {
+        // Circular avatar
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.closePath();
+        ctx.clip();
+        ctx.drawImage(p.data.img, p.x - p.r, p.y - p.r, p.r * 2, p.r * 2);
 
-      // Vignette
-      const innerVignette = ctx.createRadialGradient(p.x, p.y, p.r * 0.65, p.x, p.y, p.r);
-      innerVignette.addColorStop(0, "rgba(0,0,0,0)");
-      innerVignette.addColorStop(1, "rgba(0,0,0,0.38)");
-      ctx.fillStyle = innerVignette;
-      ctx.fillRect(p.x - p.r, p.y - p.r, p.r * 2, p.r * 2);
-      ctx.restore();
+        // Vignette
+        const innerVignette = ctx.createRadialGradient(p.x, p.y, p.r * 0.65, p.x, p.y, p.r);
+        innerVignette.addColorStop(0, "rgba(0,0,0,0)");
+        innerVignette.addColorStop(1, "rgba(0,0,0,0.38)");
+        ctx.fillStyle = innerVignette;
+        ctx.fillRect(p.x - p.r, p.y - p.r, p.r * 2, p.r * 2);
+        ctx.restore();
+      } else {
+        drawFallbackAvatar(ctx, p.x, p.y, p.r, p.color);
+      }
 
       // Frame with glow
       if (frameImg) {
@@ -1553,10 +1565,11 @@ async function generateLeaderboardCanvas(guild, topMembers = []) {
       ctx.font = "bold 15px Segoe UI, sans-serif";
       ctx.fillText(p.data.name.slice(0, 16), p.x, p.y + p.r + 48);
 
-      // Score
-      ctx.fillStyle = "#CBD5E1";
-      ctx.font = "600 12px Segoe UI, sans-serif";
-      ctx.fillText(`${p.data.score} Pts Kontribusi`, p.x, p.y + p.r + 66);
+      // Voice Duration Badge
+      ctx.fillStyle = "#38BDF8";
+      ctx.font = "bold 12px Segoe UI, sans-serif";
+      const liveTag = p.data.isLive ? " [LIVE VC]" : "";
+      ctx.fillText(`${p.data.timeDisplay}${liveTag}`, p.x, p.y + p.r + 67);
     } else {
       // Empty Podium Placeholder
       drawFallbackAvatar(ctx, p.x, p.y, p.r, p.color);
@@ -1573,10 +1586,10 @@ async function generateLeaderboardCanvas(guild, topMembers = []) {
     }
   });
 
-  // 4. Ranks 4 to 8 Table Below
+  // 4. Ranks 4 to 10 Table Below
   const tableY = 325;
   const tableW = width - 96;
-  const tableH = 155;
+  const tableH = 215;
   ctx.fillStyle = "rgba(255, 255, 255, 0.04)";
   ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
   ctx.lineWidth = 1;
@@ -1588,38 +1601,59 @@ async function generateLeaderboardCanvas(guild, topMembers = []) {
   ctx.textAlign = "start";
   ctx.fillStyle = "#CBD5E1";
   ctx.font = "bold 11px Segoe UI, sans-serif";
-  ctx.fillText("TOP SURVIVOR PERINGKAT BERIKUTNYA:", 68, tableY + 26);
+  ctx.fillText("TOP VOICE SURVIVORS • PERINGKAT 4 - 10:", 68, tableY + 26);
 
-  const subRanks = topMembers.slice(3, 9);
+  const subRanks = topMembers.slice(3, 10);
   if (subRanks.length === 0) {
     ctx.fillStyle = "rgba(255, 255, 255, 0.45)";
     ctx.font = "12px Segoe UI, sans-serif";
-    ctx.fillText("Belum ada data survivor tambahan. Selesaikan roadmap atau ikuti mabar untuk masuk leaderboard!", 68, tableY + 60);
+    ctx.fillText("Belum ada data voice tambahan. Masuk ke Voice Channel (VC) untuk masuk leaderboard!", 68, tableY + 60);
   } else {
     subRanks.forEach((m, idx) => {
-      const rx = 68 + (idx % 2) * (tableW / 2 - 20);
-      const ry = tableY + 56 + Math.floor(idx / 2) * 36;
+      // 4 items on left column (#4-#7), 3 items on right column (#8-#10)
+      const isRightCol = idx >= 4;
+      const colIdx = isRightCol ? idx - 4 : idx;
+      const colW = tableW / 2 - 20;
+      const rx = 68 + (isRightCol ? colW + 20 : 0);
+      const ry = tableY + 54 + colIdx * 38;
 
-      ctx.fillStyle = "#94A3B8";
-      ctx.font = "bold 11px Segoe UI, sans-serif";
-      ctx.fillText(`#${idx + 4}`, rx, ry);
-
-      ctx.fillStyle = "#FFFFFF";
-      ctx.font = "bold 12px Segoe UI, sans-serif";
-      const rawName = m.displayName || (m.user ? m.user.username : "Operative");
-      const name = sanitizeCanvasText(rawName, "Operative");
-      ctx.fillText(name.slice(0, 16), rx + 30, ry);
+      // Rank badge
+      ctx.fillStyle = "rgba(255, 255, 255, 0.08)";
+      ctx.beginPath();
+      ctx.roundRect(rx, ry - 14, 28, 20, 4);
+      ctx.fill();
 
       ctx.fillStyle = "#E2E8F0";
-      ctx.font = "600 11px Segoe UI, sans-serif";
-      ctx.fillText(`• ${m.score || 0} Poin`, rx + 220, ry);
+      ctx.font = "bold 11px Segoe UI, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(`#${idx + 4}`, rx + 14, ry);
+
+      // Status dot (green if live in VC, subtle gray otherwise)
+      ctx.beginPath();
+      ctx.arc(rx + 38, ry - 4, 4, 0, Math.PI * 2);
+      ctx.fillStyle = m.isLive ? "#22C55E" : "rgba(255, 255, 255, 0.25)";
+      ctx.fill();
+
+      // Name
+      ctx.textAlign = "start";
+      ctx.fillStyle = "#FFFFFF";
+      ctx.font = "bold 13px Segoe UI, sans-serif";
+      const rawName = m.displayName || (m.user ? m.user.username : "Operative");
+      const name = sanitizeCanvasText(rawName, "Operative");
+      ctx.fillText(name.slice(0, 16), rx + 48, ry);
+
+      // Duration
+      ctx.fillStyle = "#38BDF8";
+      ctx.font = "600 12px Segoe UI, sans-serif";
+      const durationText = m.timeDisplay || m.shortDisplay || "0 Menit";
+      ctx.fillText(durationText, rx + 240, ry);
     });
   }
 
   // 5. Footer Tagline
   ctx.fillStyle = "#71717A";
   ctx.font = "500 11px Segoe UI, sans-serif";
-  ctx.fillText("HOLLOWBORN EXPEDITION LEADERBOARD • BORN FROM NOTHING. UNITED AS ONE.", 48, height - 24);
+  ctx.fillText("HOLLOWBORN VOICE ACTIVITY LEADERBOARD • BORN FROM NOTHING. UNITED AS ONE.", 48, height - 20);
 
   return canvas.toBuffer("image/png");
 }

@@ -2,8 +2,8 @@ const { buildLeaderboardMessage } = require("../../utils/statsHelper");
 
 module.exports = {
   name: "leaderboard",
-  description: "Papan peringkat survivor paling aktif berkontribusi di pulau SOTF",
-  aliases: ["top", "halloffame", "peringkat"],
+  description: "Papan peringkat Top 10 survivor paling aktif di Voice Channel (VC)",
+  aliases: ["top", "halloffame", "peringkat", "voiceleaderboard", "vc"],
   async executeSlash(interaction) {
     await interaction.deferReply();
     const { embed, files } = await buildLeaderboardMessage(interaction.guild);
