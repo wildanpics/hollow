@@ -10,8 +10,10 @@ const altFontRegPath = path.resolve(__dirname, "assets/fonts/segoeui.ttf");
 
 if (fs.existsSync(fontBoldPath)) {
   GlobalFonts.registerFromPath(fontBoldPath, "HollowBold");
+  GlobalFonts.registerFromPath(fontBoldPath, "Segoe UI");
 } else if (fs.existsSync(altFontBoldPath)) {
   GlobalFonts.registerFromPath(altFontBoldPath, "HollowBold");
+  GlobalFonts.registerFromPath(altFontBoldPath, "Segoe UI");
 }
 
 if (fs.existsSync(fontRegPath)) {
@@ -30,7 +32,13 @@ let cachedWelcomeFrameImage = null;
 
 async function loadCachedAsset(cacheRef, relPath, label) {
   if (cacheRef) return cacheRef;
-  const fullPath = path.resolve(__dirname, relPath);
+  let fullPath = path.resolve(__dirname, relPath);
+  if (!fs.existsSync(fullPath)) {
+    const fallbackPath = path.resolve(__dirname, "assets", path.basename(relPath));
+    if (fs.existsSync(fallbackPath)) {
+      fullPath = fallbackPath;
+    }
+  }
   if (fs.existsSync(fullPath)) {
     try {
       const buf = fs.readFileSync(fullPath);
@@ -55,6 +63,19 @@ async function getWelcomeBgImage() {
 async function getWelcomeFrameImage() {
   cachedWelcomeFrameImage = await loadCachedAsset(cachedWelcomeFrameImage, "../assets/welcome-avatar-frame.png", "welcome-avatar-frame.png");
   return cachedWelcomeFrameImage;
+}
+
+let cachedLeaderboardBgImage = null;
+let cachedChampionCrownImage = null;
+
+async function getLeaderboardBgImage() {
+  cachedLeaderboardBgImage = await loadCachedAsset(cachedLeaderboardBgImage, "../assets/leaderboard-bg.jpg", "leaderboard-bg.jpg");
+  return cachedLeaderboardBgImage;
+}
+
+async function getChampionCrownImage() {
+  cachedChampionCrownImage = await loadCachedAsset(cachedChampionCrownImage, "../assets/champion-crown.png", "champion-crown.png");
+  return cachedChampionCrownImage;
 }
 
 const SMALL_CAPS_MAP = {
@@ -1457,21 +1478,25 @@ function generateLoadoutCanvas(member, loadout = {}) {
 // ==========================================
 
 async function generateLeaderboardCanvas(guild, topMembers = []) {
-  const width = 1024;
-  const height = 580;
-  const canvas = createCanvas(width, height);
-  const ctx = canvas.getContext("2d");
-
-  // Load Frame asset and Top 3 Avatars
-  const [frameImg, ...topAvatars] = await Promise.all([
+  const [bgImg, frameImg, crownImg, ...topAvatars] = await Promise.all([
+    getLeaderboardBgImage(),
     getWelcomeFrameImage(),
+    getChampionCrownImage(),
     ...topMembers.slice(0, 3).map(async m => {
       if (!m) return null;
       let img = null;
+      let avatarUrl = null;
       if (m.user && typeof m.user.displayAvatarURL === "function") {
-        img = await safeLoadAvatar(m.user.displayAvatarURL({ extension: "png", size: 128 }));
+        avatarUrl = m.user.displayAvatarURL({ extension: "png", size: 128 });
+      } else if (m.member && typeof m.member.displayAvatarURL === "function") {
+        avatarUrl = m.member.displayAvatarURL({ extension: "png", size: 128 });
+      } else if (typeof m.displayAvatarURL === "function") {
+        avatarUrl = m.displayAvatarURL({ extension: "png", size: 128 });
       }
-      const cleanLbName = sanitizeCanvasText(m.displayName || (m.user ? m.user.username : "Operative"), "Operative");
+      if (avatarUrl) {
+        img = await safeLoadAvatar(avatarUrl);
+      }
+      const cleanLbName = sanitizeCanvasText(m.displayName || m.name || (m.user ? m.user.username : "Operative"), "Operative");
       return {
         img,
         name: cleanLbName,
@@ -1483,64 +1508,59 @@ async function generateLeaderboardCanvas(guild, topMembers = []) {
     })
   ]);
 
-  // 1. Deep Matte Obsidian Background
-  const bgGrad = ctx.createLinearGradient(0, 0, width, height);
-  bgGrad.addColorStop(0, "#050507");
-  bgGrad.addColorStop(0.5, "#0d0e15");
-  bgGrad.addColorStop(1, "#050507");
-  ctx.fillStyle = bgGrad;
-  ctx.fillRect(0, 0, width, height);
+  const width = bgImg ? bgImg.width : 1024;
+  const height = bgImg ? bgImg.height : 591;
+  const canvas = createCanvas(width, height);
+  const ctx = canvas.getContext("2d");
 
-  // Subtle chrome wave on top
-  const topGlow = ctx.createRadialGradient(width / 2, 0, 10, width / 2, 0, 460);
-  topGlow.addColorStop(0, "rgba(255, 255, 255, 0.10)");
-  topGlow.addColorStop(1, "rgba(255, 255, 255, 0)");
-  ctx.fillStyle = topGlow;
-  ctx.fillRect(0, 0, width, 140);
+  // 1. Draw Template Background
+  if (bgImg) {
+    ctx.drawImage(bgImg, 0, 0, width, height);
+  } else {
+    const bgGrad = ctx.createLinearGradient(0, 0, width, height);
+    bgGrad.addColorStop(0, "#050507");
+    bgGrad.addColorStop(0.5, "#0d0e15");
+    bgGrad.addColorStop(1, "#050507");
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, width, height);
+  }
 
-  // Chrome metallic border & crosshairs
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.20)";
-  ctx.lineWidth = 1.2;
-  ctx.strokeRect(18, 18, width - 36, height - 36);
-
-  const drawCornerCrosshair = (cx, cy) => {
-    ctx.strokeStyle = "#FFFFFF";
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(cx - 8, cy); ctx.lineTo(cx + 8, cy);
-    ctx.moveTo(cx, cy - 8); ctx.lineTo(cx, cy + 8);
-    ctx.stroke();
-  };
-  drawCornerCrosshair(28, 28);
-  drawCornerCrosshair(width - 28, 28);
-  drawCornerCrosshair(28, height - 28);
-  drawCornerCrosshair(width - 28, height - 28);
-
-  // 2. Header
+  // 2. Header Top Left
   ctx.textAlign = "start";
   ctx.fillStyle = "#FFFFFF";
-  ctx.font = "22px HollowBold, Segoe UI, sans-serif";
-  ctx.shadowColor = "rgba(255, 255, 255, 0.35)";
+  ctx.font = "16px HollowBold, Segoe UI, sans-serif";
+  ctx.shadowColor = "rgba(255, 255, 255, 0.4)";
   ctx.shadowBlur = 8;
-  ctx.fillText("HOLLOWBORN // VOICE ACTIVITY HALL OF FAME", 48, 56);
+  ctx.fillText("HOLLOWBORN // VOICE ACTIVITY HALL OF FAME", 52, 60);
   ctx.shadowBlur = 0;
 
   ctx.fillStyle = "#94A3B8";
   ctx.font = "11px HollowBold, Segoe UI, sans-serif";
-  ctx.fillText("BORN FROM NOTHING. UNITED AS ONE. • TOP 10 SURVIVORS VOICE TIME & ACTIVITY", 48, 74);
-
-  // Barcode top right
-  drawBarcode(ctx, width - 210, 38, 160, 24, "rgba(255, 255, 255, 0.35)");
+  ctx.fillText("BORN FROM NOTHING. UNITED AS ONE. • TOP 10 SURVIVORS", 52, 78);
 
   // 3. Top 3 Podium
   const podiumLayout = [
-    { rank: 2, data: topAvatars[1], x: 230, y: 172, r: 44, color: "#E2E8F0", glow: "rgba(226, 232, 240, 0.5)", title: "RANK 2 // SILVER" },
-    { rank: 1, data: topAvatars[0], x: 512, y: 152, r: 54, color: "#FFD700", glow: "rgba(255, 215, 0, 0.6)", title: "RANK 1 // GOLD CHAMPION" },
-    { rank: 3, data: topAvatars[2], x: 794, y: 180, r: 40, color: "#F59E0B", glow: "rgba(245, 158, 11, 0.5)", title: "RANK 3 // BRONZE" }
+    { rank: 2, data: topAvatars[1], x: 230, y: 154, r: 42, color: "#E2E8F0", glow: "rgba(226, 232, 240, 0.5)", title: "RANK 2 // SILVER" },
+    { rank: 1, data: topAvatars[0], x: 512, y: 136, r: 46, color: "#FFD700", glow: "rgba(255, 215, 0, 0.75)", title: "RANK 1 // GOLD CHAMPION" },
+    { rank: 3, data: topAvatars[2], x: 794, y: 158, r: 40, color: "#F59E0B", glow: "rgba(245, 158, 11, 0.5)", title: "RANK 3 // BRONZE" }
   ];
 
   podiumLayout.forEach(p => {
-    ctx.textAlign = "center";
+    // For Rank 1 ONLY: Golden Crown & Laurel Wreath around frame
+    if (p.rank === 1 && crownImg) {
+      const scale = 0.35;
+      const dw = 555 * scale;
+      const dh = 498 * scale;
+      const dx = p.x - (512 - 234) * scale;
+      const dy = p.y - (300 - 33) * scale - 2;
+
+      ctx.save();
+      ctx.shadowColor = "rgba(255, 215, 0, 0.85)";
+      ctx.shadowBlur = 22;
+      ctx.drawImage(crownImg, 234, 33, 555, 498, dx, dy, dw, dh);
+      ctx.restore();
+    }
+
     if (p.data && (p.data.img || p.data.name)) {
       if (p.data.img) {
         // Circular avatar
@@ -1562,7 +1582,7 @@ async function generateLeaderboardCanvas(guild, topMembers = []) {
         drawFallbackAvatar(ctx, p.x, p.y, p.r, p.color);
       }
 
-      // Frame with glow
+      // Star Compass Frame with glow
       if (frameImg) {
         const fW = Math.round(p.r * 2.8);
         const fH = Math.round(fW * (frameImg.height / frameImg.width));
@@ -1573,21 +1593,22 @@ async function generateLeaderboardCanvas(guild, topMembers = []) {
         ctx.restore();
       }
 
-      // Rank Title Badge
+      // Title Badge
+      ctx.textAlign = "center";
       ctx.fillStyle = p.color;
       ctx.font = "11px HollowBold, Segoe UI, sans-serif";
-      ctx.fillText(p.title, p.x, p.y + p.r + 28);
+      ctx.fillText(p.title, p.x, 226);
 
       // Operative Name
       ctx.fillStyle = "#FFFFFF";
       ctx.font = "15px HollowBold, Segoe UI, sans-serif";
-      ctx.fillText(p.data.name.slice(0, 16), p.x, p.y + p.r + 48);
+      ctx.fillText(p.data.name.slice(0, 16), p.x, 245);
 
-      // Voice Duration Badge
+      // Voice Duration
       ctx.fillStyle = "#38BDF8";
       ctx.font = "12px HollowBold, Segoe UI, sans-serif";
       const liveTag = p.data.isLive ? " [LIVE VC]" : "";
-      ctx.fillText(`${p.data.shortDisplay || p.data.timeDisplay}${liveTag}`, p.x, p.y + p.r + 67);
+      ctx.fillText(`${p.data.shortDisplay || p.data.timeDisplay}${liveTag}`, p.x, 263);
     } else {
       // Empty Podium Placeholder
       drawFallbackAvatar(ctx, p.x, p.y, p.r, p.color);
@@ -1598,43 +1619,32 @@ async function generateLeaderboardCanvas(guild, topMembers = []) {
       }
       ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
       ctx.font = "11px HollowBold, Segoe UI, sans-serif";
-      ctx.fillText(p.title, p.x, p.y + p.r + 28);
+      ctx.fillText(p.title, p.x, 226);
       ctx.font = "11px HollowRegular, Segoe UI, sans-serif";
-      ctx.fillText("_Belum Terisi_", p.x, p.y + p.r + 48);
+      ctx.fillText("_Belum Terisi_", p.x, 245);
     }
   });
 
-  // 4. Ranks 4 to 10 Table Below
-  const tableY = 325;
-  const tableW = width - 96;
-  const tableH = 215;
-
-  ctx.fillStyle = "rgba(255, 255, 255, 0.04)";
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.roundRect(48, tableY, tableW, tableH, 8);
-  ctx.fill();
-  ctx.stroke();
-
+  // 4. Ranks 4 to 10 Table inside the template's container box
   ctx.textAlign = "start";
   ctx.fillStyle = "#CBD5E1";
   ctx.font = "11px HollowBold, Segoe UI, sans-serif";
-  ctx.fillText("TOP VOICE SURVIVORS • PERINGKAT 4 - 10:", 68, tableY + 26);
+  ctx.fillText("TOP VOICE SURVIVORS • PERINGKAT 4 - 10:", 88, 318);
 
   const subRanks = topMembers.slice(3, 10);
+  const tableW = 840;
   if (subRanks.length === 0) {
     ctx.fillStyle = "rgba(255, 255, 255, 0.45)";
     ctx.font = "12px HollowRegular, Segoe UI, sans-serif";
-    ctx.fillText("Belum ada data voice tambahan. Masuk ke Voice Channel (VC) untuk masuk leaderboard!", 68, tableY + 60);
+    ctx.fillText("Belum ada data voice tambahan. Masuk ke Voice Channel (VC) untuk masuk leaderboard!", 88, 355);
   } else {
     subRanks.forEach((m, idx) => {
       // 4 items on left column (#4-#7), 3 items on right column (#8-#10)
       const isRightCol = idx >= 4;
       const colIdx = isRightCol ? idx - 4 : idx;
       const colW = tableW / 2 - 20;
-      const rx = 68 + (isRightCol ? colW + 20 : 0);
-      const ry = tableY + 56 + colIdx * 38;
+      const rx = 88 + (isRightCol ? colW + 40 : 0);
+      const ry = 348 + colIdx * 38;
 
       // Rank badge box
       ctx.fillStyle = "rgba(255, 255, 255, 0.08)";
@@ -1657,7 +1667,7 @@ async function generateLeaderboardCanvas(guild, topMembers = []) {
       ctx.textAlign = "start";
       ctx.fillStyle = "#FFFFFF";
       ctx.font = "13px HollowBold, Segoe UI, sans-serif";
-      const rawName = m.displayName || (m.user ? m.user.username : "Operative");
+      const rawName = m.displayName || m.name || (m.user ? m.user.username : "Operative");
       const name = sanitizeCanvasText(rawName, "Operative");
       ctx.fillText(name.slice(0, 16), rx + 48, ry);
 
@@ -1668,12 +1678,6 @@ async function generateLeaderboardCanvas(guild, topMembers = []) {
       ctx.fillText(durationText, rx + 240, ry);
     });
   }
-
-  // 5. Footer Tagline
-  ctx.textAlign = "start";
-  ctx.fillStyle = "#71717A";
-  ctx.font = "11px HollowRegular, Segoe UI, sans-serif";
-  ctx.fillText("HOLLOWBORN VOICE ACTIVITY LEADERBOARD • BORN FROM NOTHING. UNITED AS ONE.", 48, height - 20);
 
   return canvas.toBuffer("image/png");
 }
