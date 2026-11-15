@@ -1458,13 +1458,12 @@ function generateLoadoutCanvas(member, loadout = {}) {
 
 async function generateLeaderboardCanvas(guild, topMembers = []) {
   const width = 1024;
-  const height = 680;
+  const height = 580;
   const canvas = createCanvas(width, height);
   const ctx = canvas.getContext("2d");
 
-  // Load Background, Avatar Frame, and Top 3 Avatars
-  const [bgImg, frameImg, ...topAvatars] = await Promise.all([
-    getWelcomeBgImage(),
+  // Load Frame asset and Top 3 Avatars
+  const [frameImg, ...topAvatars] = await Promise.all([
     getWelcomeFrameImage(),
     ...topMembers.slice(0, 3).map(async m => {
       if (!m) return null;
@@ -1484,288 +1483,197 @@ async function generateLeaderboardCanvas(guild, topMembers = []) {
     })
   ]);
 
-  // 1. Deep Metallic Carbon Background
-  const baseGrad = ctx.createLinearGradient(0, 0, width, height);
-  baseGrad.addColorStop(0, "#040508");
-  baseGrad.addColorStop(0.5, "#0a0d14");
-  baseGrad.addColorStop(1, "#040508");
-  ctx.fillStyle = baseGrad;
+  // 1. Deep Matte Obsidian Background
+  const bgGrad = ctx.createLinearGradient(0, 0, width, height);
+  bgGrad.addColorStop(0, "#050507");
+  bgGrad.addColorStop(0.5, "#0d0e15");
+  bgGrad.addColorStop(1, "#050507");
+  ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, width, height);
 
-  // Overlay Metallic Welcome Template
-  if (bgImg) {
-    ctx.save();
-    ctx.globalAlpha = 0.45;
-    ctx.drawImage(bgImg, 0, 0, width, height);
-    ctx.restore();
-  }
+  // Subtle chrome wave on top
+  const topGlow = ctx.createRadialGradient(width / 2, 0, 10, width / 2, 0, 460);
+  topGlow.addColorStop(0, "rgba(255, 255, 255, 0.10)");
+  topGlow.addColorStop(1, "rgba(255, 255, 255, 0)");
+  ctx.fillStyle = topGlow;
+  ctx.fillRect(0, 0, width, 140);
 
-  // Vignette & Scanlines
-  const vigGrad = ctx.createRadialGradient(width / 2, height / 2, 200, width / 2, height / 2, 600);
-  vigGrad.addColorStop(0, "rgba(0,0,0,0)");
-  vigGrad.addColorStop(1, "rgba(0,0,0,0.75)");
-  ctx.fillStyle = vigGrad;
-  ctx.fillRect(0, 0, width, height);
+  // Chrome metallic border & crosshairs
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.20)";
+  ctx.lineWidth = 1.2;
+  ctx.strokeRect(18, 18, width - 36, height - 36);
 
-  // Subtle Cyan Ambient Flare from Top
-  const topFlare = ctx.createRadialGradient(width / 2, 0, 10, width / 2, 0, 480);
-  topFlare.addColorStop(0, "rgba(56, 189, 248, 0.15)");
-  topFlare.addColorStop(1, "rgba(56, 189, 248, 0)");
-  ctx.fillStyle = topFlare;
-  ctx.fillRect(0, 0, width, 240);
-
-  // Outer Border & Corner Brackets
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.18)";
-  ctx.lineWidth = 1;
-  ctx.strokeRect(20, 20, width - 40, height - 40);
-
-  const drawCornerBracket = (bx, by, xDir, yDir) => {
-    ctx.strokeStyle = "#38BDF8";
-    ctx.lineWidth = 2.5;
+  const drawCornerCrosshair = (cx, cy) => {
+    ctx.strokeStyle = "#FFFFFF";
+    ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.moveTo(bx, by + yDir * 18);
-    ctx.lineTo(bx, by);
-    ctx.lineTo(bx + xDir * 18, by);
+    ctx.moveTo(cx - 8, cy); ctx.lineTo(cx + 8, cy);
+    ctx.moveTo(cx, cy - 8); ctx.lineTo(cx, cy + 8);
     ctx.stroke();
   };
-  drawCornerBracket(20, 20, 1, 1);
-  drawCornerBracket(width - 20, 20, -1, 1);
-  drawCornerBracket(20, height - 20, 1, -1);
-  drawCornerBracket(width - 20, height - 20, -1, -1);
+  drawCornerCrosshair(28, 28);
+  drawCornerCrosshair(width - 28, 28);
+  drawCornerCrosshair(28, height - 28);
+  drawCornerCrosshair(width - 28, height - 28);
 
   // 2. Header
   ctx.textAlign = "start";
-  ctx.fillStyle = "#38BDF8";
-  ctx.font = "11px HollowBold, Segoe UI, sans-serif";
-  ctx.fillText("// HOLLOWBORN TACTICAL NETWORK • OP-NET v2.4", 48, 48);
-
   ctx.fillStyle = "#FFFFFF";
-  ctx.font = "24px HollowBold, Segoe UI, sans-serif";
-  ctx.shadowColor = "rgba(255, 255, 255, 0.4)";
-  ctx.shadowBlur = 10;
-  ctx.fillText("EXPEDITION HALL OF FAME", 48, 76);
+  ctx.font = "22px HollowBold, Segoe UI, sans-serif";
+  ctx.shadowColor = "rgba(255, 255, 255, 0.35)";
+  ctx.shadowBlur = 8;
+  ctx.fillText("HOLLOWBORN // VOICE ACTIVITY HALL OF FAME", 48, 56);
   ctx.shadowBlur = 0;
 
   ctx.fillStyle = "#94A3B8";
-  ctx.font = "11px HollowRegular, Segoe UI, sans-serif";
-  ctx.fillText("TOP 10 SURVIVORS • REAL-TIME VOICE DURATION & ENGAGEMENT TRACKER", 48, 94);
+  ctx.font = "11px HollowBold, Segoe UI, sans-serif";
+  ctx.fillText("BORN FROM NOTHING. UNITED AS ONE. • TOP 10 SURVIVORS VOICE TIME & ACTIVITY", 48, 74);
 
-  // Real-Time Sync Badge
-  const syncX = width - 180;
-  const syncY = 48;
-  ctx.fillStyle = "rgba(34, 197, 94, 0.12)";
-  ctx.strokeStyle = "#22C55E";
-  ctx.lineWidth = 1.2;
-  ctx.beginPath();
-  ctx.roundRect(syncX, syncY, 132, 24, 12);
-  ctx.fill();
-  ctx.stroke();
-
-  ctx.beginPath();
-  ctx.arc(syncX + 14, syncY + 12, 4, 0, Math.PI * 2);
-  ctx.fillStyle = "#22C55E";
-  ctx.fill();
-
-  ctx.fillStyle = "#FFFFFF";
-  ctx.font = "10px HollowBold, Segoe UI, sans-serif";
-  ctx.textAlign = "left";
-  ctx.fillText("REAL-TIME SYNC", syncX + 24, syncY + 16);
+  // Barcode top right
+  drawBarcode(ctx, width - 210, 38, 160, 24, "rgba(255, 255, 255, 0.35)");
 
   // 3. Top 3 Podium
   const podiumLayout = [
-    { rank: 2, data: topAvatars[1], x: 230, y: 195, r: 44, color: "#E2E8F0", glow: "rgba(226, 232, 240, 0.45)", title: "RANK 02 // SILVER", standH: 62 },
-    { rank: 1, data: topAvatars[0], x: 512, y: 172, r: 54, color: "#FFD700", glow: "rgba(255, 215, 0, 0.6)", title: "RANK 01 // CHAMPION", standH: 72 },
-    { rank: 3, data: topAvatars[2], x: 794, y: 202, r: 40, color: "#F59E0B", glow: "rgba(245, 158, 11, 0.45)", title: "RANK 03 // BRONZE", standH: 58 }
+    { rank: 2, data: topAvatars[1], x: 230, y: 172, r: 44, color: "#E2E8F0", glow: "rgba(226, 232, 240, 0.5)", title: "RANK 2 // SILVER" },
+    { rank: 1, data: topAvatars[0], x: 512, y: 152, r: 54, color: "#FFD700", glow: "rgba(255, 215, 0, 0.6)", title: "RANK 1 // GOLD CHAMPION" },
+    { rank: 3, data: topAvatars[2], x: 794, y: 180, r: 40, color: "#F59E0B", glow: "rgba(245, 158, 11, 0.5)", title: "RANK 3 // BRONZE" }
   ];
 
   podiumLayout.forEach(p => {
-    // Ambient radial glow behind avatar
-    const flare = ctx.createRadialGradient(p.x, p.y, p.r * 0.4, p.x, p.y, p.r * 2.2);
-    flare.addColorStop(0, p.glow);
-    flare.addColorStop(1, "rgba(0,0,0,0)");
-    ctx.fillStyle = flare;
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, p.r * 2.2, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.textAlign = "center";
+    if (p.data && (p.data.img || p.data.name)) {
+      if (p.data.img) {
+        // Circular avatar
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.closePath();
+        ctx.clip();
+        ctx.drawImage(p.data.img, p.x - p.r, p.y - p.r, p.r * 2, p.r * 2);
 
-    if (p.data && p.data.img) {
-      // Circular avatar
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      ctx.closePath();
-      ctx.clip();
-      ctx.drawImage(p.data.img, p.x - p.r, p.y - p.r, p.r * 2, p.r * 2);
+        // Vignette
+        const innerVignette = ctx.createRadialGradient(p.x, p.y, p.r * 0.65, p.x, p.y, p.r);
+        innerVignette.addColorStop(0, "rgba(0,0,0,0)");
+        innerVignette.addColorStop(1, "rgba(0,0,0,0.38)");
+        ctx.fillStyle = innerVignette;
+        ctx.fillRect(p.x - p.r, p.y - p.r, p.r * 2, p.r * 2);
+        ctx.restore();
+      } else {
+        drawFallbackAvatar(ctx, p.x, p.y, p.r, p.color);
+      }
 
-      // Vignette inside avatar
-      const innerVignette = ctx.createRadialGradient(p.x, p.y, p.r * 0.65, p.x, p.y, p.r);
-      innerVignette.addColorStop(0, "rgba(0,0,0,0)");
-      innerVignette.addColorStop(1, "rgba(0,0,0,0.38)");
-      ctx.fillStyle = innerVignette;
-      ctx.fillRect(p.x - p.r, p.y - p.r, p.r * 2, p.r * 2);
-      ctx.restore();
+      // Frame with glow
+      if (frameImg) {
+        const fW = Math.round(p.r * 2.8);
+        const fH = Math.round(fW * (frameImg.height / frameImg.width));
+        ctx.save();
+        ctx.shadowColor = p.glow;
+        ctx.shadowBlur = 14;
+        ctx.drawImage(frameImg, p.x - fW / 2, p.y - fH / 2, fW, fH);
+        ctx.restore();
+      }
+
+      // Rank Title Badge
+      ctx.fillStyle = p.color;
+      ctx.font = "11px HollowBold, Segoe UI, sans-serif";
+      ctx.fillText(p.title, p.x, p.y + p.r + 28);
+
+      // Operative Name
+      ctx.fillStyle = "#FFFFFF";
+      ctx.font = "15px HollowBold, Segoe UI, sans-serif";
+      ctx.fillText(p.data.name.slice(0, 16), p.x, p.y + p.r + 48);
+
+      // Voice Duration Badge
+      ctx.fillStyle = "#38BDF8";
+      ctx.font = "12px HollowBold, Segoe UI, sans-serif";
+      const liveTag = p.data.isLive ? " [LIVE VC]" : "";
+      ctx.fillText(`${p.data.shortDisplay || p.data.timeDisplay}${liveTag}`, p.x, p.y + p.r + 67);
     } else {
+      // Empty Podium Placeholder
       drawFallbackAvatar(ctx, p.x, p.y, p.r, p.color);
+      if (frameImg) {
+        const fW = Math.round(p.r * 2.8);
+        const fH = Math.round(fW * (frameImg.height / frameImg.width));
+        ctx.drawImage(frameImg, p.x - fW / 2, p.y - fH / 2, fW, fH);
+      }
+      ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
+      ctx.font = "11px HollowBold, Segoe UI, sans-serif";
+      ctx.fillText(p.title, p.x, p.y + p.r + 28);
+      ctx.font = "11px HollowRegular, Segoe UI, sans-serif";
+      ctx.fillText("_Belum Terisi_", p.x, p.y + p.r + 48);
     }
-
-    // Frame overlay with glow
-    if (frameImg) {
-      const fW = Math.round(p.r * 2.8);
-      const fH = Math.round(fW * (frameImg.height / frameImg.width));
-      ctx.save();
-      ctx.shadowColor = p.glow;
-      ctx.shadowBlur = 16;
-      ctx.drawImage(frameImg, p.x - fW / 2, p.y - fH / 2, fW, fH);
-      ctx.restore();
-    }
-
-    // Pedestal Card Stand
-    const standW = p.rank === 1 ? 210 : 180;
-    const standX = p.x - standW / 2;
-    const standY = p.y + p.r + 14;
-
-    ctx.save();
-    // Glass base
-    ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
-    ctx.strokeStyle = p.color;
-    ctx.lineWidth = p.rank === 1 ? 1.8 : 1.2;
-    ctx.beginPath();
-    ctx.roundRect(standX, standY, standW, p.standH, 8);
-    ctx.fill();
-    ctx.stroke();
-
-    // Top neon glow line on stand
-    ctx.strokeStyle = p.color;
-    ctx.lineWidth = 2.5;
-    ctx.beginPath();
-    ctx.moveTo(standX + 16, standY);
-    ctx.lineTo(standX + standW - 16, standY);
-    ctx.stroke();
-
-    // Rank Title
-    ctx.textAlign = "center";
-    ctx.fillStyle = p.color;
-    ctx.font = "10px HollowBold, Segoe UI, sans-serif";
-    ctx.fillText(p.title, p.x, standY + 18);
-
-    // Name
-    ctx.fillStyle = "#FFFFFF";
-    ctx.font = (p.rank === 1 ? "16px" : "14px") + " HollowBold, Segoe UI, sans-serif";
-    const nameStr = p.data && p.data.name ? p.data.name.slice(0, 16) : "_Belum Terisi_";
-    ctx.fillText(nameStr, p.x, standY + 36);
-
-    // Duration & Live tag
-    ctx.fillStyle = "#38BDF8";
-    ctx.font = "11px HollowBold, Segoe UI, sans-serif";
-    const durStr = p.data && p.data.shortDisplay ? p.data.shortDisplay : "0m";
-    const liveTag = p.data && p.data.isLive ? " • [LIVE VC]" : "";
-    ctx.fillText(durStr + liveTag, p.x, standY + 52);
-    ctx.restore();
   });
 
-  // 4. Ranks 4 to 10 Table
-  const tableY = 360;
+  // 4. Ranks 4 to 10 Table Below
+  const tableY = 325;
   const tableW = width - 96;
+  const tableH = 215;
 
-  ctx.textAlign = "start";
-  ctx.fillStyle = "#94A3B8";
-  ctx.font = "11px HollowBold, Segoe UI, sans-serif";
-  ctx.fillText("TOP VOICE SURVIVORS • PERINGKAT 04 - 10", 48, tableY);
-
-  const subRanks = topMembers.slice(3, 10);
-  const colW = (tableW - 24) / 2;
-
-  subRanks.forEach((m, idx) => {
-    const isRight = idx >= 4;
-    const rowIdx = isRight ? idx - 4 : idx;
-    const slotX = 48 + (isRight ? colW + 24 : 0);
-    const slotY = tableY + 16 + rowIdx * 52;
-    const slotH = 44;
-
-    // Card background
-    ctx.save();
-    ctx.fillStyle = "rgba(15, 23, 42, 0.75)";
-    ctx.strokeStyle = m.isLive ? "rgba(34, 197, 94, 0.45)" : "rgba(255, 255, 255, 0.1)";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.roundRect(slotX, slotY, colW, slotH, 6);
-    ctx.fill();
-    ctx.stroke();
-
-    // Rank pill box
-    ctx.fillStyle = "rgba(255, 255, 255, 0.08)";
-    ctx.beginPath();
-    ctx.roundRect(slotX + 10, slotY + 10, 32, 24, 4);
-    ctx.fill();
-
-    ctx.fillStyle = "#CBD5E1";
-    ctx.font = "11px HollowBold, Segoe UI, sans-serif";
-    ctx.textAlign = "center";
-    ctx.fillText("#" + (idx + 4 < 10 ? "0" : "") + (idx + 4), slotX + 26, slotY + 26);
-
-    // Live beacon / offline dot
-    ctx.beginPath();
-    ctx.arc(slotX + 54, slotY + 22, 4, 0, Math.PI * 2);
-    ctx.fillStyle = m.isLive ? "#22C55E" : "#64748B";
-    ctx.fill();
-    if (m.isLive) {
-      ctx.strokeStyle = "rgba(34, 197, 94, 0.4)";
-      ctx.lineWidth = 3;
-      ctx.stroke();
-    }
-
-    // Name
-    ctx.textAlign = "start";
-    ctx.fillStyle = "#FFFFFF";
-    ctx.font = "14px HollowBold, Segoe UI, sans-serif";
-    const rawName = m.displayName || (m.user ? m.user.username : "Operative");
-    const name = sanitizeCanvasText(rawName, "Operative");
-    ctx.fillText(name.slice(0, 16), slotX + 68, slotY + 27);
-
-    // Duration Pill Right
-    const timeBoxW = 96;
-    const timeBoxX = slotX + colW - timeBoxW - 12;
-    ctx.fillStyle = "rgba(56, 189, 248, 0.08)";
-    ctx.strokeStyle = "rgba(56, 189, 248, 0.25)";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.roundRect(timeBoxX, slotY + 10, timeBoxW, 24, 4);
-    ctx.fill();
-    ctx.stroke();
-
-    ctx.textAlign = "center";
-    ctx.fillStyle = "#38BDF8";
-    ctx.font = "11px HollowBold, Segoe UI, sans-serif";
-    const durationText = m.shortDisplay || m.timeDisplay || "0m";
-    ctx.fillText(durationText, timeBoxX + timeBoxW / 2, slotY + 26);
-    ctx.restore();
-  });
-
-  // Slot 8 in right column (Active Comms info)
-  const slot8X = 48 + colW + 24;
-  const slot8Y = tableY + 16 + 3 * 52;
-  ctx.save();
-  ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
-  ctx.strokeStyle = "rgba(56, 189, 248, 0.25)";
+  ctx.fillStyle = "rgba(255, 255, 255, 0.04)";
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
   ctx.lineWidth = 1;
-  ctx.setLineDash([4, 4]);
   ctx.beginPath();
-  ctx.roundRect(slot8X, slot8Y, colW, 44, 6);
+  ctx.roundRect(48, tableY, tableW, tableH, 8);
   ctx.fill();
   ctx.stroke();
-  ctx.setLineDash([]);
 
-  ctx.textAlign = "center";
-  ctx.fillStyle = "#38BDF8";
+  ctx.textAlign = "start";
+  ctx.fillStyle = "#CBD5E1";
   ctx.font = "11px HollowBold, Segoe UI, sans-serif";
-  ctx.fillText(">> JOIN VOICE CHAT TO CLIMB THE LEADERBOARD <<", slot8X + colW / 2, slot8Y + 26);
-  ctx.restore();
+  ctx.fillText("TOP VOICE SURVIVORS • PERINGKAT 4 - 10:", 68, tableY + 26);
+
+  const subRanks = topMembers.slice(3, 10);
+  if (subRanks.length === 0) {
+    ctx.fillStyle = "rgba(255, 255, 255, 0.45)";
+    ctx.font = "12px HollowRegular, Segoe UI, sans-serif";
+    ctx.fillText("Belum ada data voice tambahan. Masuk ke Voice Channel (VC) untuk masuk leaderboard!", 68, tableY + 60);
+  } else {
+    subRanks.forEach((m, idx) => {
+      // 4 items on left column (#4-#7), 3 items on right column (#8-#10)
+      const isRightCol = idx >= 4;
+      const colIdx = isRightCol ? idx - 4 : idx;
+      const colW = tableW / 2 - 20;
+      const rx = 68 + (isRightCol ? colW + 20 : 0);
+      const ry = tableY + 56 + colIdx * 38;
+
+      // Rank badge box
+      ctx.fillStyle = "rgba(255, 255, 255, 0.08)";
+      ctx.beginPath();
+      ctx.roundRect(rx, ry - 14, 28, 20, 4);
+      ctx.fill();
+
+      ctx.fillStyle = "#E2E8F0";
+      ctx.font = "11px HollowBold, Segoe UI, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("#" + (idx + 4), rx + 14, ry);
+
+      // Status dot (green if live in VC, subtle gray otherwise)
+      ctx.beginPath();
+      ctx.arc(rx + 38, ry - 4, 4, 0, Math.PI * 2);
+      ctx.fillStyle = m.isLive ? "#22C55E" : "rgba(255, 255, 255, 0.25)";
+      ctx.fill();
+
+      // Name
+      ctx.textAlign = "start";
+      ctx.fillStyle = "#FFFFFF";
+      ctx.font = "13px HollowBold, Segoe UI, sans-serif";
+      const rawName = m.displayName || (m.user ? m.user.username : "Operative");
+      const name = sanitizeCanvasText(rawName, "Operative");
+      ctx.fillText(name.slice(0, 16), rx + 48, ry);
+
+      // Duration
+      ctx.fillStyle = "#38BDF8";
+      ctx.font = "12px HollowBold, Segoe UI, sans-serif";
+      const durationText = m.shortDisplay || m.timeDisplay || "0 Menit";
+      ctx.fillText(durationText, rx + 240, ry);
+    });
+  }
 
   // 5. Footer Tagline
-  ctx.textAlign = "center";
-  ctx.fillStyle = "#64748B";
-  ctx.font = "10px HollowRegular, Segoe UI, sans-serif";
-  ctx.fillText("HOLLOWBORN TACTICAL LEADERBOARD • BORN FROM NOTHING. UNITED AS ONE. • ENCRYPTED COMMS", width / 2, height - 16);
+  ctx.textAlign = "start";
+  ctx.fillStyle = "#71717A";
+  ctx.font = "11px HollowRegular, Segoe UI, sans-serif";
+  ctx.fillText("HOLLOWBORN VOICE ACTIVITY LEADERBOARD • BORN FROM NOTHING. UNITED AS ONE.", 48, height - 20);
 
   return canvas.toBuffer("image/png");
 }
