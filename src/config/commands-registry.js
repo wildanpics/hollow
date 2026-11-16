@@ -222,7 +222,7 @@ const COMMANDS_REGISTRY = [
   {
     name: "queue",
     title: "🎙️ Antrean Voice Verification",
-    description: "Melihat daftar antrean verifikasi suara Kaisar dan nomor urut giliran survivor.",
+    description: "Melihat daftar antrean verifikasi suara Emperor dan nomor urut giliran survivor.",
     category: "🛡️ Voice Verification",
     permission: "Semua Anggota",
     usage: ["/queue", "!queue", "!antrean"],
@@ -231,7 +231,7 @@ const COMMANDS_REGISTRY = [
   {
     name: "verification-status",
     title: "🛡️ Status Emperor Voice Verification",
-    description: "Melihat status detail antrean dan sesi pemutaran suara transmisi kaisar yang sedang berjalan.",
+    description: "Melihat status detail antrean dan sesi pemutaran suara transmisi Emperor yang sedang berjalan.",
     category: "🛡️ Voice Verification",
     permission: "Manage Roles",
     usage: ["/verification-status", "!vstatus"],

@@ -342,7 +342,7 @@ async function executeVerificationSession(guild, member, queueItem) {
       );
       if (arrivalChannel) {
         await arrivalChannel.send({
-          content: `🎖️ **IDENTITY RECOGNIZED:** Survivor <@${verifiedMember.id}> [**${survivorTag}**] telah berhasil melewati verifikasi suara kaisar dan resmi menjadi **SURVIVOR**!`
+          content: `🎖️ **IDENTITY RECOGNIZED:** Survivor <@${verifiedMember.id}> [**${survivorTag}**] telah berhasil melewati verifikasi suara Emperor dan resmi menjadi **SURVIVOR**!`
         }).catch(() => {});
       }
     } catch (_) {}

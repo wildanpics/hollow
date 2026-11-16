@@ -16,10 +16,13 @@ function buildVerificationTutorialPayload(guildId) {
   const waitingRoomId = VERIFICATION_CONFIG.WAITING_ROOM_ID;
 
   const embed = new EmbedBuilder()
-    .setColor("#00E5FF")
-    .setTitle("🛡️ HOLLOWBORN — EMPEROR VOICE VERIFICATION")
+    .setColor("#FFFFFF")
+    .setTitle("HOLLOWBORN — VOICE VERIFICATION")
     .setDescription(
-      `Welcome to **HOLLOWBORN**. To ensure server security and verify authentic operatives, all new survivors must complete a quick automated military voice verification transmission.\n\n` +
+      `The signal has reached you. But reaching HOLLOWBORN does not mean you have been accepted.\n\n` +
+      `The Emperor must acknowledge your presence before you can enter the Order.\n\n` +
+      `Proceed to the designated transmission channel. Wait for your call, listen carefully, and let your identity be recognized.\n\n` +
+      `Not everyone reaches this transmission.\n\n` +
       `──────────────────────────────────────────────\n` +
       `### 🇬🇧 HOW TO VERIFY (ENGLISH)\n` +
       `**Step 1:** Click the **Join Waiting Room** button below or enter the <#${waitingRoomId}> voice channel.\n` +
@@ -32,15 +35,11 @@ function buildVerificationTutorialPayload(guildId) {
       `**Langkah 1:** Klik tombol **Masuk Waiting Room** di bawah atau masuk langsung ke voice channel <#${waitingRoomId}>.\n` +
       `**Langkah 2:** Kamu akan otomatis terdaftar ke dalam antrean verifikasi (FIFO). Bot akan memproses member satu per satu secara berurutan.\n` +
       `**Langkah 3:** Saat giliranmu tiba, bot akan membuat ruang khusus (\`🔒 identity-hb-xxxx\`) dan memindahkanmu ke dalamnya secara otomatis.\n` +
-      `**Langkah 4:** Dengarkan **Transmisi Sambutan Kaisar** (durasi ~15 detik). **Jangan keluar atau berpindah channel** selama siaran berlangsung.\n` +
+      `**Langkah 4:** Dengarkan **Transmisi Sambutan Emperor** (durasi ~15 detik). **Jangan keluar atau berpindah channel** selama siaran berlangsung.\n` +
       `**Langkah 5:** Setelah transmisi selesai dan identitasmu terkonfirmasi, kamu akan langsung menerima role **SURVIVOR** dan mendapatkan akses penuh ke seluruh server HOLLOWBORN.\n\n` +
       `──────────────────────────────────────────────`
     )
-    .setImage("attachment://voice-verification-banner.jpg")
-    .setFooter({
-      text: "HOLLOWBORN // TACTICAL IDENTITY VERIFICATION SYSTEM"
-    })
-    .setTimestamp();
+    .setImage("attachment://voice-verification-banner.jpg");
 
   const waitingRoomUrl = `https://discord.com/channels/${guildId}/${waitingRoomId}`;
 
