@@ -1,5 +1,6 @@
 const { Events, AttachmentBuilder } = require("discord.js");
 const { AUTO_ROLE_ID } = require("../config/roles");
+const VERIFICATION_CONFIG = require("../config/verification");
 const { loadWelcomeConfig } = require("../storage/welcomeStorage");
 const { generateWelcomeCanvas } = require("../canvas-renderers");
 const { buildLobbyWelcomeEmbed } = require("../utils/statsHelper");
@@ -7,10 +8,16 @@ const { buildLobbyWelcomeEmbed } = require("../utils/statsHelper");
 module.exports = {
   name: Events.GuildMemberAdd,
   async execute(member) {
-    // 1. Auto-Role (abaikan akun bot)
+    // 1. Auto-Role Handling
+    // Catatan: Jika AUTO_ROLE_ID adalah SURVIVOR_ROLE_ID, role ini HANYA diberikan melalui Emperor Voice Verification
+    const isSurvivorRole = AUTO_ROLE_ID === VERIFICATION_CONFIG.SURVIVOR_ROLE_ID;
+    const enableExplicitAutoRole = process.env.ENABLE_JOIN_AUTO_ROLE === "true";
+
     if (member.user?.bot) {
       console.log(`[AutoRole] Melewati auto-role untuk akun bot: ${member.user.tag}`);
-    } else {
+    } else if (isSurvivorRole && !enableExplicitAutoRole) {
+      console.log(`[AutoRole] Role SURVIVOR (${AUTO_ROLE_ID}) dialokasikan via Emperor Voice Verification. Member baru (${member.user.tag}) berstatus @everyone.`);
+    } else if (AUTO_ROLE_ID) {
       try {
         const role = member.guild.roles.cache.get(AUTO_ROLE_ID) || await member.guild.roles.fetch(AUTO_ROLE_ID);
         if (!role) {
@@ -71,4 +78,3 @@ module.exports = {
     }
   }
 };
-

@@ -172,6 +172,30 @@ const commands = [
     .setName("welcome-setup")
     .setDescription("Atur channel resmi untuk banner Canvas selamat datang member baru.")
     .addChannelOption(o => o.setName("channel").setDescription("Pilih channel tujuan (opsional, jika kosong bot buatkan otomatis)").setRequired(false))
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageRoles),
+
+  new SlashCommandBuilder()
+    .setName("queue")
+    .setDescription("Lihat status antrean verifikasi suara dan nomor urut giliranmu."),
+
+  new SlashCommandBuilder()
+    .setName("verification-status")
+    .setDescription("Cek status antrean dan sesi Emperor Voice Verification yang sedang berjalan.")
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageRoles),
+
+  new SlashCommandBuilder()
+    .setName("verification-cancel")
+    .setDescription("Batalkan sesi verifikasi suara yang macet atau bersihkan antrean.")
+    .addStringOption(o =>
+      o.setName("aksi")
+        .setDescription("Aksi pembatalan")
+        .setRequired(false)
+        .addChoices(
+          { name: "Batalkan Sesi Aktif Saat Ini", value: "session" },
+          { name: "Bersihkan Seluruh Antrean (Clear Queue)", value: "clear_queue" }
+        )
+    )
+    .addUserOption(o => o.setName("member").setDescription("Member spesifik yang ingin dibatalkan/dihapus dari antrean").setRequired(false))
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageRoles)
 ].map(c => c.toJSON());
 

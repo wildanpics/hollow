@@ -2,6 +2,7 @@ const { Events, ActivityType } = require("discord.js");
 const { loadRoadmapProgress, syncRoadmapPermanentMessage } = require("../storage/roadmapStorage");
 const { startMabarReminderInterval, loadMabarSessions } = require("../utils/mabarManager");
 const { initVoiceTracking } = require("../storage/voiceStorage");
+const { initVoiceVerificationRecovery } = require("../utils/voiceVerificationManager");
 
 module.exports = {
   name: Events.ClientReady,
@@ -28,6 +29,10 @@ module.exports = {
 
     // Initialize Voice Activity Tracking & scan VC
     initVoiceTracking(client);
+
+    // Initialize Emperor Voice Verification System & Startup Reconciliation
+    await initVoiceVerificationRecovery(client).catch(err => {
+      console.error("[VoiceVerification] Gagal menjalankan inisialisasi pemulihan:", err.message);
+    });
   }
 };
-
