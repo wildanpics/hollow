@@ -58,9 +58,10 @@ async function handleComponent(interaction) {
     // Protocol Language Selector
     if (interaction.customId === "protocol_lang_select") {
       const selectedLang = interaction.values[0];
-      const { buildProtocolEphemeral } = require("../utils/protocolHelper");
-      const payload = buildProtocolEphemeral(selectedLang);
-      return interaction.reply({ ...payload, ephemeral: true });
+      const { switchProtocolLanguageInChannel } = require("../utils/protocolHelper");
+      await interaction.deferUpdate();
+      await switchProtocolLanguageInChannel(interaction.channel, interaction.client.user.id, selectedLang);
+      return;
     }
 
     // Help Category Selector
@@ -151,9 +152,10 @@ async function handleComponent(interaction) {
     // PROTOCOL — Language Switch Buttons
     if (cid === "protocol_btn_id" || cid === "protocol_btn_en") {
       const selectedLang = cid === "protocol_btn_en" ? "en" : "id";
-      const { buildProtocolEphemeral } = require("../utils/protocolHelper");
-      const payload = buildProtocolEphemeral(selectedLang);
-      return interaction.reply({ ...payload, ephemeral: true });
+      const { switchProtocolLanguageInChannel } = require("../utils/protocolHelper");
+      await interaction.deferUpdate();
+      await switchProtocolLanguageInChannel(interaction.channel, interaction.client.user.id, selectedLang);
+      return;
     }
 
     // VERIFICATION — Check Queue Button

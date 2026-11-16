@@ -130,9 +130,32 @@ function buildProtocolEphemeral(lang = "en") {
   };
 }
 
+async function switchProtocolLanguageInChannel(channel, clientUserId, lang) {
+  try {
+    const messages = await channel.messages.fetch({ limit: 10 });
+    const botMsgs = [...messages.values()]
+      .filter(m => m.author.id === clientUserId)
+      .sort((a, b) => a.createdTimestamp - b.createdTimestamp);
+
+    if (botMsgs.length >= 2) {
+      const p1 = buildProtocolMessage1(lang);
+      const p2 = buildProtocolMessage2(lang);
+      await Promise.all([
+        botMsgs[0].edit(p1).catch(err => console.error("Error updating msg1:", err.message)),
+        botMsgs[1].edit(p2).catch(err => console.error("Error updating msg2:", err.message))
+      ]);
+      return true;
+    }
+  } catch (err) {
+    console.error("[ProtocolHelper] Gagal switch bahasa di channel:", err.message);
+  }
+  return false;
+}
+
 module.exports = {
   buildProtocolMessage1,
   buildProtocolMessage2,
   buildProtocolEphemeral,
-  buildProtocolComponents
+  buildProtocolComponents,
+  switchProtocolLanguageInChannel
 };
