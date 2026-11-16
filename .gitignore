@@ -4,4 +4,10 @@ scratch/
 assets/test-*.png
 src/index.backup.js
 
+# Persistent application databases & backups (never overwritten by git pull/reset)
+data/*-persistent.json*
+data/*.bak
+data/*.tmp
+
+
 
