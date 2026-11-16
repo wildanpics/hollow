@@ -245,6 +245,15 @@ const COMMANDS_REGISTRY = [
     permission: "Manage Roles",
     usage: ["/verification-cancel [aksi] [member]", "!vcancel"],
     examples: ["/verification-cancel", "/verification-cancel aksi:clear_queue", "!vcancel"]
+  },
+  {
+    name: "verification-setup",
+    title: "⚙️ Setup Panel Voice Verification",
+    description: "Mengirimkan embed panel tutorial verifikasi suara dua bahasa beserta banner dan tombol Waiting Room.",
+    category: "🛡️ Voice Verification",
+    permission: "Manage Roles",
+    usage: ["/verification-setup [channel]", "!vsetup"],
+    examples: ["/verification-setup", "!vsetup"]
   }
 ];
 

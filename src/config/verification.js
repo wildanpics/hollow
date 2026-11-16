@@ -2,8 +2,10 @@ const path = require("path");
 
 const VERIFICATION_CONFIG = {
   WAITING_ROOM_ID: process.env.WAITING_ROOM_ID || "1571888536565710878",
+  VERIFICATION_CHANNEL_ID: process.env.VERIFICATION_CHANNEL_ID || "1571888897942884413",
   SURVIVOR_ROLE_ID: process.env.SURVIVOR_ROLE_ID || "1567389277468500008",
   EMPEROR_AUDIO_PATH: process.env.EMPEROR_AUDIO_PATH || path.join(__dirname, "../../assets/sound/emperor-welcome.mp3"),
+  BANNER_PATH: path.join(__dirname, "../../assets/voice-verification-banner.jpg"),
   PLAYBACK_TIMEOUT_MS: parseInt(process.env.VERIFICATION_PLAYBACK_TIMEOUT_MS, 10) || 45000,
   SESSION_TIMEOUT_MS: parseInt(process.env.VERIFICATION_SESSION_TIMEOUT_MS, 10) || 90000,
   TEMP_CHANNEL_PREFIX: "identity-",

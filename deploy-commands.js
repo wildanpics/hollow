@@ -196,6 +196,12 @@ const commands = [
         )
     )
     .addUserOption(o => o.setName("member").setDescription("Member spesifik yang ingin dibatalkan/dihapus dari antrean").setRequired(false))
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageRoles),
+
+  new SlashCommandBuilder()
+    .setName("verification-setup")
+    .setDescription("Kirim panel instruksi Emperor Voice Verification dengan banner dan tombol Waiting Room.")
+    .addChannelOption(o => o.setName("channel").setDescription("Channel teks tujuan pengiriman panel (opsional)").setRequired(false))
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageRoles)
 ].map(c => c.toJSON());
 
