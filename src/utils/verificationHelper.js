@@ -9,8 +9,9 @@ const {
 const VERIFICATION_CONFIG = require("../config/verification");
 
 function buildVerificationTutorialPayload(guildId) {
+  const fileName = `voice-verification-banner-${Date.now()}.jpg`;
   const attachment = new AttachmentBuilder(VERIFICATION_CONFIG.BANNER_PATH, {
-    name: "voice-verification-banner.jpg"
+    name: fileName
   });
 
   const waitingRoomId = VERIFICATION_CONFIG.WAITING_ROOM_ID;
@@ -39,7 +40,7 @@ function buildVerificationTutorialPayload(guildId) {
       `**Langkah 5:** Setelah transmisi selesai dan identitasmu terkonfirmasi, kamu akan langsung menerima role **SURVIVOR** dan mendapatkan akses penuh ke seluruh server HOLLOWBORN.\n\n` +
       `──────────────────────────────────────────────`
     )
-    .setImage("attachment://voice-verification-banner.jpg");
+    .setImage(`attachment://${fileName}`);
 
   const waitingRoomUrl = `https://discord.com/channels/${guildId}/${waitingRoomId}`;
 
