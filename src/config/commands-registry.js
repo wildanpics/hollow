@@ -254,6 +254,15 @@ const COMMANDS_REGISTRY = [
     permission: "Manage Roles",
     usage: ["/verification-setup [channel]", "!vsetup"],
     examples: ["/verification-setup", "!vsetup"]
+  },
+  {
+    name: "protocol-setup",
+    title: "📜 Setup Protokol Server HOLLOWBORN",
+    description: "Mengirimkan dokumen resmi Protokol Server HOLLOWBORN dengan banner taktis dan dropdown pemilih bahasa.",
+    category: "🛡️ Server Governance",
+    permission: "Manage Roles",
+    usage: ["/protocol-setup [channel]", "!psetup"],
+    examples: ["/protocol-setup", "!psetup"]
   }
 ];
 

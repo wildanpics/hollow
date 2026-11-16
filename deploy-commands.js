@@ -202,6 +202,12 @@ const commands = [
     .setName("verification-setup")
     .setDescription("Kirim panel instruksi Emperor Voice Verification dengan banner dan tombol Waiting Room.")
     .addChannelOption(o => o.setName("channel").setDescription("Channel teks tujuan pengiriman panel (opsional)").setRequired(false))
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageRoles),
+
+  new SlashCommandBuilder()
+    .setName("protocol-setup")
+    .setDescription("Kirim panel Protokol Server HOLLOWBORN dengan banner dan pemilih bahasa (ID/EN).")
+    .addChannelOption(o => o.setName("channel").setDescription("Channel teks tujuan pengiriman protokol (opsional)").setRequired(false))
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageRoles)
 ].map(c => c.toJSON());
 

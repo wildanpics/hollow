@@ -55,6 +55,14 @@ const {
 async function handleComponent(interaction) {
   // 1. Select Menus
   if (interaction.isStringSelectMenu()) {
+    // Protocol Language Selector
+    if (interaction.customId === "protocol_lang_select") {
+      const selectedLang = interaction.values[0];
+      const { buildProtocolEphemeral } = require("../utils/protocolHelper");
+      const payload = buildProtocolEphemeral(selectedLang);
+      return interaction.reply({ ...payload, ephemeral: true });
+    }
+
     // Help Category Selector
     if (interaction.customId === "help_category_select") {
       const val = interaction.values[0];
@@ -139,6 +147,14 @@ async function handleComponent(interaction) {
   // 2. Buttons
   if (interaction.isButton()) {
     const cid = interaction.customId;
+
+    // PROTOCOL — Language Switch Buttons
+    if (cid === "protocol_btn_id" || cid === "protocol_btn_en") {
+      const selectedLang = cid === "protocol_btn_en" ? "en" : "id";
+      const { buildProtocolEphemeral } = require("../utils/protocolHelper");
+      const payload = buildProtocolEphemeral(selectedLang);
+      return interaction.reply({ ...payload, ephemeral: true });
+    }
 
     // VERIFICATION — Check Queue Button
     if (cid === "check_my_queue") {
