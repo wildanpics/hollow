@@ -1,20 +1,33 @@
-const PROTOCOL_ID = `**KLASIFIKASI: INTERNAL / KHUSUS ANGGOTA HOLLOWBORN**
+const CHAPTERS_ID = {
+  overview: {
+    title: "HOLLOWBORN — PROTOKOL SERVER // MUKADIMAH",
+    description: `**KLASIFIKASI: INTERNAL / KHUSUS ANGGOTA HOLLOWBORN**
 
 ---
 
 ### THE SOVEREIGN TELAH BERBICARA.
 
-Selamat datang di HOLLOWBORN.
+Selamat datang di **HOLLOWBORN**.
 
 Server ini merupakan ruang berkumpul bagi orang-orang dengan latar belakang, minat, dan pengalaman yang berbeda. Untuk menjaga lingkungan komunitas tetap aman, nyaman, dan tertib, setiap anggota wajib memahami serta mengikuti protokol yang berlaku.
 
 Keanggotaan di HOLLOWBORN bukan hanya tentang mendapatkan akses ke server, tetapi juga tentang menghargai sesama anggota dan ikut menjaga komunitas yang kita bangun bersama.
 
-Sebelum melanjutkan, pahami seluruh ketentuan berikut.
+Sebelum melanjutkan, pahami seluruh ketentuan berikut dengan memilih bab melalui menu dropdown di bawah.
 
 ---
 
-## I. PRINSIP KOMUNITAS
+### 📑 DAFTAR ISI PROTOKOL RESMI:
+• **Bab I:** Prinsip Komunitas *(Loyalitas, Rasa Hormat, Persatuan, Kerahasiaan, Tanggung Jawab)*
+• **Bab II:** Peraturan Server *(Perilaku, Channel, Konten & Keamanan, Voice, Identitas)*
+• **Bab III:** Keamanan & Etika Digital *(Keamanan Akun, Perlindungan Data, Fitur Discord, Pelaporan)*
+• **Bab IV & V:** Sanksi, Penindakan & Pernyataan Akhir
+
+*Gunakan menu dropdown di bawah untuk membuka bab yang ingin Anda baca.*`
+  },
+  bab1: {
+    title: "HOLLOWBORN — BAB I: PRINSIP KOMUNITAS",
+    description: `## I. PRINSIP KOMUNITAS
 
 ### 01. LOYALITAS
 Jaga kepercayaan yang telah diberikan oleh komunitas. Jangan menyalahgunakan akses, wewenang, atau kepercayaan anggota lain untuk kepentingan pribadi. Segala bentuk penipuan, pengkhianatan, dan tindakan yang merugikan komunitas tidak akan ditoleransi.
@@ -30,11 +43,11 @@ Hormati privasi setiap anggota. Dilarang menyebarkan tangkapan layar percakapan 
 Jangan membagikan informasi pribadi milik anggota lain, termasuk alamat, nomor telepon, akun pribadi, maupun data yang dapat mengungkap identitas mereka.
 
 ### 05. TANGGUNG JAWAB
-Setiap anggota bertanggung jawab atas perilakunya sendiri. Hindari tindakan yang dapat merusak reputasi komunitas, mengganggu aktivitas anggota lain, atau menyalahgunakan fasilitas yang tersedia di server.
-
----
-
-## II. PERATURAN SERVER
+Setiap anggota bertanggung jawab atas perilakunya sendiri. Hindari tindakan yang dapat merusak reputasi komunitas, mengganggu aktivitas anggota lain, atau menyalahgunakan fasilitas yang tersedia di server.`
+  },
+  bab2: {
+    title: "HOLLOWBORN — BAB II: PERATURAN SERVER",
+    description: `## II. PERATURAN SERVER
 
 Seluruh anggota HOLLOWBORN wajib mengikuti aturan berikut selama menggunakan server:
 
@@ -69,11 +82,11 @@ Seluruh anggota HOLLOWBORN wajib mengikuti aturan berikut selama menggunakan ser
 • Dilarang menyamar sebagai THE EMPEROR, MONARCH, COMMANDER, GUARDIAN, atau personel lainnya.
 • Jangan menyalahgunakan role maupun izin akses yang diberikan.
 • Jangan mencoba memasuki channel atau area yang tidak diperuntukkan bagi role-mu.
-• Dilarang menggunakan bot, webhook, atau fitur server untuk mengganggu aktivitas komunitas.
-
----
-
-## III. KEAMANAN DAN ETIKA DIGITAL
+• Dilarang menggunakan bot, webhook, atau fitur server untuk mengganggu aktivitas komunitas.`
+  },
+  bab3: {
+    title: "HOLLOWBORN — BAB III: KEAMANAN DAN ETIKA DIGITAL",
+    description: `## III. KEAMANAN DAN ETIKA DIGITAL
 
 Untuk menjaga keamanan akun, data, dan seluruh aktivitas komunitas, setiap anggota wajib memperhatikan ketentuan berikut:
 
@@ -99,11 +112,11 @@ Untuk menjaga keamanan akun, data, dan seluruh aktivitas komunitas, setiap anggo
 ### 04. PELAPORAN MASALAH
 • Laporkan pelanggaran, akun mencurigakan, atau tindakan yang merugikan komunitas kepada Guardian atau Command Division beserta bukti yang relevan.
 • Jangan melakukan tindakan balasan, mempermalukan pihak yang dilaporkan, atau memperkeruh situasi.
-• Biarkan personel yang berwenang menangani laporan dan menentukan tindakan selanjutnya.
-
----
-
-## IV. SANKSI DAN PENINDAKAN
+• Biarkan personel yang berwenang menangani laporan dan menentukan tindakan selanjutnya.`
+  },
+  bab4: {
+    title: "HOLLOWBORN — BAB IV & V: SANKSI & PERNYATAAN AKHIR",
+    description: `## IV. SANKSI DAN PENINDAKAN
 
 Setiap pelanggaran terhadap protokol akan ditinjau oleh Command Division. Tindakan yang diberikan disesuaikan dengan tingkat pelanggaran, riwayat perilaku, serta dampaknya terhadap komunitas:
 
@@ -122,25 +135,40 @@ Dengan menjadi bagian dari HOLLOWBORN, setiap anggota diharapkan mampu mengharga
 
 Jadikan HOLLOWBORN sebagai tempat untuk berinteraksi, berbagi pengalaman, bermain, dan membangun hubungan dengan anggota lainnya. Setiap anggota memiliki peran dalam menjaga komunitas ini tetap berjalan dengan baik.
 
-**BORN FROM NOTHING. UNITED AS ONE.**`;
+**BORN FROM NOTHING. UNITED AS ONE.**`
+  }
+};
 
-const PROTOCOL_EN = `**CLASSIFICATION: INTERNAL / HOLLOWBORN OPERATIVES ONLY**
+const CHAPTERS_EN = {
+  overview: {
+    title: "HOLLOWBORN — SERVER PROTOCOL // OVERVIEW",
+    description: `**CLASSIFICATION: INTERNAL / HOLLOWBORN OPERATIVES ONLY**
 
 ---
 
 ### THE SOVEREIGN HAS SPOKEN.
 
-Welcome to HOLLOWBORN.
+Welcome to **HOLLOWBORN**.
 
 This server serves as an assembly ground for individuals of diverse backgrounds, specializations, and operational experience. To ensure the integrity, security, and discipline of our community, every operative must comprehend and uphold the established protocols.
 
 Membership within HOLLOWBORN extends beyond merely acquiring server clearance—it demands mutual respect among peers and an active role in safeguarding the order we forge together.
 
-Before proceeding, familiarize yourself with all directives outlined below.
+Before proceeding, familiarize yourself with all directives outlined below by selecting chapters from the dropdown menu.
 
 ---
 
-## I. COMMUNITY PRINCIPLES
+### 📑 OFFICIAL PROTOCOL INDEX:
+• **Chapter I:** Community Principles *(Loyalty, Respect, Unity, Confidentiality, Responsibility)*
+• **Chapter II:** Server Regulations *(Conduct, Channel Utilization, Content Security, Voice, Jurisdiction)*
+• **Chapter III:** Security & Digital Protocols *(Account Defense, Data Privacy, Feature Usage, Escalation)*
+• **Chapter IV & V:** Disciplinary Countermeasures & Final Decree
+
+*Use the dropdown menu below to navigate to the chapter you wish to inspect.*`
+  },
+  bab1: {
+    title: "HOLLOWBORN — CHAPTER I: COMMUNITY PRINCIPLES",
+    description: `## I. COMMUNITY PRINCIPLES
 
 ### 01. LOYALTY
 Guard the trust bestowed upon you by the order. Never exploit access, authority, or the trust of fellow operatives for personal gain. Deception, treason, and actions detrimental to the collective will not be tolerated.
@@ -156,11 +184,11 @@ Respect the privacy of every operative. Disseminating screenshots of private dis
 Never disclose personal data belonging to fellow operatives—including physical addresses, phone numbers, personal credentials, or data that could compromise their real-world identity.
 
 ### 05. RESPONSIBILITY
-Every operative bears absolute accountability for their own conduct. Refrain from actions that tarnish the community's standing, disrupt operative engagements, or misuse server infrastructure.
-
----
-
-## II. SERVER REGULATIONS
+Every operative bears absolute accountability for their own conduct. Refrain from actions that tarnish the community's standing, disrupt operative engagements, or misuse server infrastructure.`
+  },
+  bab2: {
+    title: "HOLLOWBORN — CHAPTER II: SERVER REGULATIONS",
+    description: `## II. SERVER REGULATIONS
 
 All HOLLOWBORN operatives are obligated to comply with the following directives while operating within this server:
 
@@ -195,11 +223,11 @@ All HOLLOWBORN operatives are obligated to comply with the following directives 
 • Impersonation of THE EMPEROR, MONARCH, COMMANDER, GUARDIAN, or command personnel is strictly forbidden.
 • Never abuse granted roles, privileges, or channel permissions.
 • Do not attempt to bypass access barriers or infiltrate restricted sectors beyond your clearance level.
-• Using automated scripts, external webhooks, or server exploits to interfere with server operations is forbidden.
-
----
-
-## III. SECURITY AND DIGITAL PROTOCOLS
+• Using automated scripts, external webhooks, or server exploits to interfere with server operations is forbidden.`
+  },
+  bab3: {
+    title: "HOLLOWBORN — CHAPTER III: SECURITY AND DIGITAL PROTOCOLS",
+    description: `## III. SECURITY AND DIGITAL PROTOCOLS
 
 To preserve operational security, personal credentials, and collective community safety, adhere to the following security protocols:
 
@@ -224,11 +252,11 @@ To preserve operational security, personal credentials, and collective community
 ### 04. INCIDENT ESCALATION
 • Report protocol breaches, suspicious entities, or hostile maneuvers directly to Guardian or Command Division personnel with supporting evidence.
 • Refrain from retaliatory actions, public shaming, or escalating contentious situations.
-• Allow authorized personnel to conduct evaluations and execute appropriate countermeasures.
-
----
-
-## IV. DISCIPLINARY COUNTERMEASURES
+• Allow authorized personnel to conduct evaluations and execute appropriate countermeasures.`
+  },
+  bab4: {
+    title: "HOLLOWBORN — CHAPTER IV & V: DISCIPLINARY ACTIONS & FINAL DECREE",
+    description: `## IV. DISCIPLINARY COUNTERMEASURES
 
 Every protocol breach will be rigorously investigated by the Command Division. Disciplinary actions are proportionate to the severity of the offense, past conduct, and operational fallout:
 
@@ -247,9 +275,11 @@ By joining HOLLOWBORN, each operative pledges to uphold mutual respect, maintain
 
 Make HOLLOWBORN a bastion for shared triumph, tactical collaboration, camaraderie, and meaningful alliances. Every operative holds a vital stake in maintaining the order.
 
-**BORN FROM NOTHING. UNITED AS ONE.**`;
+**BORN FROM NOTHING. UNITED AS ONE.**`
+  }
+};
 
 module.exports = {
-  PROTOCOL_ID,
-  PROTOCOL_EN
+  CHAPTERS_ID,
+  CHAPTERS_EN
 };

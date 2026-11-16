@@ -55,13 +55,13 @@ const {
 async function handleComponent(interaction) {
   // 1. Select Menus
   if (interaction.isStringSelectMenu()) {
-    // Protocol Language Selector
-    if (interaction.customId === "protocol_lang_select") {
-      const selectedLang = interaction.values[0];
-      const { switchProtocolLanguageInChannel } = require("../utils/protocolHelper");
-      await interaction.deferUpdate();
-      await switchProtocolLanguageInChannel(interaction.channel, interaction.client.user.id, selectedLang);
-      return;
+    // Protocol Chapter Selector (Dropdown)
+    if (interaction.customId.startsWith("protocol_chapter_select_")) {
+      const lang = interaction.customId.replace("protocol_chapter_select_", "");
+      const selectedChapter = interaction.values[0];
+      const { buildProtocolPanel } = require("../utils/protocolHelper");
+      const payload = buildProtocolPanel(selectedChapter, lang);
+      return interaction.update(payload);
     }
 
     // Help Category Selector
@@ -149,13 +149,25 @@ async function handleComponent(interaction) {
   if (interaction.isButton()) {
     const cid = interaction.customId;
 
-    // PROTOCOL — Language Switch Buttons
-    if (cid === "protocol_btn_id" || cid === "protocol_btn_en") {
-      const selectedLang = cid === "protocol_btn_en" ? "en" : "id";
-      const { switchProtocolLanguageInChannel } = require("../utils/protocolHelper");
-      await interaction.deferUpdate();
-      await switchProtocolLanguageInChannel(interaction.channel, interaction.client.user.id, selectedLang);
-      return;
+    // PROTOCOL — Navigation Buttons (Previous / Next)
+    if (cid.startsWith("protocol_nav_")) {
+      const parts = cid.split("_"); // ["protocol", "nav", chapterKey, lang]
+      const targetChapter = parts[2];
+      const lang = parts[3] || "id";
+      if (targetChapter === "none") return interaction.deferUpdate();
+      const { buildProtocolPanel } = require("../utils/protocolHelper");
+      const payload = buildProtocolPanel(targetChapter, lang);
+      return interaction.update(payload);
+    }
+
+    // PROTOCOL — Language Toggle Buttons (ID / EN)
+    if (cid.startsWith("protocol_toggle_")) {
+      const parts = cid.split("_"); // ["protocol", "toggle", lang, chapterKey]
+      const lang = parts[2];
+      const chapterKey = parts[3] || "overview";
+      const { buildProtocolPanel } = require("../utils/protocolHelper");
+      const payload = buildProtocolPanel(chapterKey, lang);
+      return interaction.update(payload);
     }
 
     // VERIFICATION — Check Queue Button

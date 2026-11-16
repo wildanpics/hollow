@@ -1,9 +1,9 @@
 const { PermissionsBitField, ChannelType } = require("discord.js");
-const { buildProtocolMessage1, buildProtocolMessage2 } = require("../../utils/protocolHelper");
+const { buildProtocolPanel } = require("../../utils/protocolHelper");
 
 module.exports = {
   name: "protocol-setup",
-  description: "Kirim panel Protokol Server HOLLOWBORN dengan banner dan pemilih bahasa (ID/EN)",
+  description: "Kirim panel interaktif Protokol Server HOLLOWBORN (Chapter Navigator)",
   aliases: ["psetup", "setup-protocol"],
   async executeSlash(interaction) {
     const isOwner = interaction.user.id === interaction.guild.ownerId;
@@ -38,18 +38,24 @@ module.exports = {
         });
       }
 
-      const p1 = buildProtocolMessage1("id");
-      const msg1 = await targetChannel.send(p1);
+      // Bersihkan pesan lama bot jika ada di channel tersebut
+      const oldMessages = await targetChannel.messages.fetch({ limit: 10 }).catch(() => null);
+      if (oldMessages) {
+        const botMsgs = oldMessages.filter(m => m.author.id === interaction.client.user.id);
+        for (const [_, msg] of botMsgs) {
+          await msg.delete().catch(() => {});
+        }
+      }
 
-      const p2 = buildProtocolMessage2("id");
-      const msg2 = await targetChannel.send(p2);
+      const payload = buildProtocolPanel("overview", "id");
+      const sentMsg = await targetChannel.send(payload);
 
       return interaction.editReply({
-        content: `✅ **Berhasil Mengirim Protokol Server!**\nPanel protokol telah dikirim ke <#${targetChannel.id}> (Message 1: \`${msg1.id}\`, Message 2: \`${msg2.id}\`).`
+        content: `✅ **Berhasil Memasang Panel Protokol Server!**\nPanel interaktif bab navigator telah aktif di <#${targetChannel.id}> (Message ID: \`${sentMsg.id}\`).`
       });
     } catch (err) {
       console.error("[ProtocolSetup] Gagal:", err);
-      return interaction.editReply({ content: `❌ Gagal mengirim protokol: ${err.message}` });
+      return interaction.editReply({ content: `❌ Gagal memasang protokol: ${err.message}` });
     }
   },
   async executePrefix(message) {
@@ -71,12 +77,17 @@ module.exports = {
       return message.reply("❌ Channel teks protokol tidak ditemukan.");
     }
 
-    const p1 = buildProtocolMessage1("id");
-    const msg1 = await targetChannel.send(p1);
+    const oldMessages = await targetChannel.messages.fetch({ limit: 10 }).catch(() => null);
+    if (oldMessages) {
+      const botMsgs = oldMessages.filter(m => m.author.id === message.client.user.id);
+      for (const [_, msg] of botMsgs) {
+        await msg.delete().catch(() => {});
+      }
+    }
 
-    const p2 = buildProtocolMessage2("id");
-    const msg2 = await targetChannel.send(p2);
+    const payload = buildProtocolPanel("overview", "id");
+    const sentMsg = await targetChannel.send(payload);
 
-    return message.reply(`✅ **Panel Protokol Berhasil Dikirim ke <#${targetChannel.id}>!** (Message 1: \`${msg1.id}\`, Message 2: \`${msg2.id}\`)`);
+    return message.reply(`✅ **Panel Protokol Berhasil Dipasang ke <#${targetChannel.id}>!** (Message ID: \`${sentMsg.id}\`)`);
   }
 };

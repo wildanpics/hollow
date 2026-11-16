@@ -7,155 +7,106 @@ const {
   StringSelectMenuBuilder,
   AttachmentBuilder
 } = require("discord.js");
-const { PROTOCOL_ID, PROTOCOL_EN } = require("../config/protocol-text");
+const { CHAPTERS_ID, CHAPTERS_EN } = require("../config/protocol-text");
 
 const BANNER_PATH = path.join(__dirname, "../../assets/server-protocol-banner.jpg");
 
-function splitProtocolSections(text) {
-  const isEn = text.includes("SERVER REGULATIONS");
-  const s2Tag = isEn ? "## II. SERVER REGULATIONS" : "## II. PERATURAN SERVER";
-  const s3Tag = isEn ? "## III. SECURITY AND DIGITAL PROTOCOLS" : "## III. KEAMANAN DAN ETIKA DIGITAL";
+const CHAPTER_KEYS = ["overview", "bab1", "bab2", "bab3", "bab4"];
 
-  const idx2 = text.indexOf(s2Tag);
-  const idx3 = text.indexOf(s3Tag);
-
-  const part1 = text.slice(0, idx2).trim();
-  const part2 = text.slice(idx2, idx3).trim();
-  const part3 = text.slice(idx3).trim();
-
-  return { part1, part2, part3 };
+function getChapterData(chapterKey = "overview", lang = "id") {
+  const dict = lang === "en" ? CHAPTERS_EN : CHAPTERS_ID;
+  return dict[chapterKey] || dict.overview;
 }
 
-function buildProtocolComponents(currentLang = "id") {
-  const selectMenu = new StringSelectMenuBuilder()
-    .setCustomId("protocol_lang_select")
-    .setPlaceholder("🌐 Pilih Bahasa / Select Language")
-    .addOptions([
-      {
-        label: "Bahasa Indonesia",
-        value: "id",
-        description: "Tampilkan seluruh protokol dalam Bahasa Indonesia",
-        emoji: "🇮🇩",
-        default: currentLang === "id"
-      },
-      {
-        label: "English",
-        value: "en",
-        description: "Display complete server protocol in English",
-        emoji: "🇬🇧",
-        default: currentLang === "en"
-      }
-    ]);
+function buildProtocolPanel(chapterKey = "overview", lang = "id") {
+  if (!CHAPTER_KEYS.includes(chapterKey)) {
+    chapterKey = "overview";
+  }
 
-  const buttonRow = new ActionRowBuilder().addComponents(
-    new ButtonBuilder()
-      .setCustomId("protocol_btn_id")
-      .setLabel("Bahasa Indonesia")
-      .setEmoji("🇮🇩")
-      .setStyle(currentLang === "id" ? ButtonStyle.Primary : ButtonStyle.Secondary),
-    new ButtonBuilder()
-      .setCustomId("protocol_btn_en")
-      .setLabel("English")
-      .setEmoji("🇬🇧")
-      .setStyle(currentLang === "en" ? ButtonStyle.Primary : ButtonStyle.Secondary)
-  );
-
-  const menuRow = new ActionRowBuilder().addComponents(selectMenu);
-
-  return [menuRow, buttonRow];
-}
-
-function buildProtocolMessage1(lang = "id") {
-  const text = lang === "en" ? PROTOCOL_EN : PROTOCOL_ID;
-  const { part1, part2 } = splitProtocolSections(text);
+  const chapter = getChapterData(chapterKey, lang);
+  const isEn = lang === "en";
 
   const fileName = `server-protocol-banner-${Date.now()}.jpg`;
   const attachment = new AttachmentBuilder(BANNER_PATH, { name: fileName });
 
-  const embed1 = new EmbedBuilder()
+  // 1. Embed Header & Chapter Content
+  const embed = new EmbedBuilder()
     .setColor("#FFFFFF")
-    .setTitle(lang === "en" ? "HOLLOWBORN — SERVER PROTOCOL" : "HOLLOWBORN — PROTOKOL SERVER")
-    .setDescription(part1)
-    .setImage(`attachment://${fileName}`);
+    .setTitle(chapter.title)
+    .setDescription(chapter.description)
+    .setImage(`attachment://${fileName}`)
+    .setFooter({
+      text: isEn ? "HOLLOWBORN // SERVER PROTOCOL DIRECTIVES" : "HOLLOWBORN // PROTOKOL & ATURAN RESMI SERVER"
+    });
 
-  const embed2 = new EmbedBuilder()
-    .setColor("#FFFFFF")
-    .setDescription(part2);
+  // 2. Dropdown Menu for Chapters
+  const options = isEn ? [
+    { label: "Overview & Sovereign Decree", value: "overview", description: "Classification & Sovereign statement", emoji: "📜" },
+    { label: "Chapter I: Community Principles", value: "bab1", description: "Loyalty, Respect, Unity, Confidentiality, Responsibility", emoji: "🛡️" },
+    { label: "Chapter II: Server Regulations", value: "bab2", description: "Conduct, Channel Usage, Content Security, Voice, Identity", emoji: "⚔️" },
+    { label: "Chapter III: Security & Digital Protocols", value: "bab3", description: "Account Defense, Data Privacy, Feature Usage, Escalation", emoji: "🔐" },
+    { label: "Chapter IV & V: Sanctions & Final Decree", value: "bab4", description: "Disciplinary actions, appeals & HOLLOWBORN decree", emoji: "⚖️" }
+  ] : [
+    { label: "Mukadimah & Titah Sovereign", value: "overview", description: "Klasifikasi & Pernyataan Resmi The Sovereign", emoji: "📜" },
+    { label: "Bab I: Prinsip Komunitas", value: "bab1", description: "Loyalitas, Rasa Hormat, Persatuan, Kerahasiaan, Tanggung Jawab", emoji: "🛡️" },
+    { label: "Bab II: Peraturan Server", value: "bab2", description: "Perilaku, Channel, Konten & Keamanan, Voice, Identitas", emoji: "⚔️" },
+    { label: "Bab III: Keamanan & Etika Digital", value: "bab3", description: "Keamanan Akun, Perlindungan Data, Fitur Discord, Pelaporan", emoji: "🔐" },
+    { label: "Bab IV & V: Sanksi & Pernyataan Akhir", value: "bab4", description: "Sanksi penindakan & Sumpah persatuan HOLLOWBORN", emoji: "⚖️" }
+  ];
+
+  // Mark active option
+  options.forEach(opt => {
+    opt.default = opt.value === chapterKey;
+  });
+
+  const selectMenu = new StringSelectMenuBuilder()
+    .setCustomId(`protocol_chapter_select_${lang}`)
+    .setPlaceholder(isEn ? "📖 Select Chapter to View..." : "📖 Pilih Bab Protokol untuk Dibaca...")
+    .addOptions(options);
+
+  const menuRow = new ActionRowBuilder().addComponents(selectMenu);
+
+  // 3. Navigation & Language Buttons
+  const currIdx = CHAPTER_KEYS.indexOf(chapterKey);
+  const prevKey = currIdx > 0 ? CHAPTER_KEYS[currIdx - 1] : null;
+  const nextKey = currIdx < CHAPTER_KEYS.length - 1 ? CHAPTER_KEYS[currIdx + 1] : null;
+
+  const btnRow = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId(`protocol_nav_${prevKey || "none"}_${lang}`)
+      .setLabel(isEn ? "Previous Chapter" : "Bab Sebelumnya")
+      .setEmoji("⬅️")
+      .setStyle(ButtonStyle.Secondary)
+      .setDisabled(!prevKey),
+
+    new ButtonBuilder()
+      .setCustomId(`protocol_nav_${nextKey || "none"}_${lang}`)
+      .setLabel(isEn ? "Next Chapter" : "Bab Selanjutnya")
+      .setEmoji("➡️")
+      .setStyle(ButtonStyle.Secondary)
+      .setDisabled(!nextKey),
+
+    new ButtonBuilder()
+      .setCustomId(`protocol_toggle_id_${chapterKey}`)
+      .setLabel("Bahasa Indonesia")
+      .setEmoji("🇮🇩")
+      .setStyle(!isEn ? ButtonStyle.Primary : ButtonStyle.Secondary),
+
+    new ButtonBuilder()
+      .setCustomId(`protocol_toggle_en_${chapterKey}`)
+      .setLabel("English")
+      .setEmoji("🇬🇧")
+      .setStyle(isEn ? ButtonStyle.Primary : ButtonStyle.Secondary)
+  );
 
   return {
-    embeds: [embed1, embed2],
+    embeds: [embed],
+    components: [menuRow, btnRow],
     files: [attachment]
   };
 }
 
-function buildProtocolMessage2(lang = "id") {
-  const text = lang === "en" ? PROTOCOL_EN : PROTOCOL_ID;
-  const { part3 } = splitProtocolSections(text);
-
-  const embed = new EmbedBuilder()
-    .setColor("#FFFFFF")
-    .setDescription(part3);
-
-  const components = buildProtocolComponents(lang);
-
-  return {
-    embeds: [embed],
-    components
-  };
-}
-
-function buildProtocolEphemeral(lang = "en") {
-  const text = lang === "en" ? PROTOCOL_EN : PROTOCOL_ID;
-  const { part1, part2, part3 } = splitProtocolSections(text);
-
-  const embed1 = new EmbedBuilder()
-    .setColor("#FFFFFF")
-    .setTitle(lang === "en" ? "🛡️ HOLLOWBORN — SERVER PROTOCOL (ENGLISH)" : "🛡️ HOLLOWBORN — PROTOKOL SERVER (INDONESIA)")
-    .setDescription(part1);
-
-  const embed2 = new EmbedBuilder()
-    .setColor("#FFFFFF")
-    .setDescription(part2);
-
-  const embed3 = new EmbedBuilder()
-    .setColor("#FFFFFF")
-    .setDescription(part3);
-
-  const components = buildProtocolComponents(lang);
-
-  return {
-    embeds: [embed1, embed2, embed3],
-    components,
-    ephemeral: true
-  };
-}
-
-async function switchProtocolLanguageInChannel(channel, clientUserId, lang) {
-  try {
-    const messages = await channel.messages.fetch({ limit: 10 });
-    const botMsgs = [...messages.values()]
-      .filter(m => m.author.id === clientUserId)
-      .sort((a, b) => a.createdTimestamp - b.createdTimestamp);
-
-    if (botMsgs.length >= 2) {
-      const p1 = buildProtocolMessage1(lang);
-      const p2 = buildProtocolMessage2(lang);
-      await Promise.all([
-        botMsgs[0].edit(p1).catch(err => console.error("Error updating msg1:", err.message)),
-        botMsgs[1].edit(p2).catch(err => console.error("Error updating msg2:", err.message))
-      ]);
-      return true;
-    }
-  } catch (err) {
-    console.error("[ProtocolHelper] Gagal switch bahasa di channel:", err.message);
-  }
-  return false;
-}
-
 module.exports = {
-  buildProtocolMessage1,
-  buildProtocolMessage2,
-  buildProtocolEphemeral,
-  buildProtocolComponents,
-  switchProtocolLanguageInChannel
+  CHAPTER_KEYS,
+  buildProtocolPanel
 };
