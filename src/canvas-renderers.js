@@ -3,24 +3,26 @@ const path = require("path");
 const { createCanvas, loadImage, GlobalFonts } = require("@napi-rs/canvas");
 
 // Register bundled fonts so text renders reliably on any OS (Linux, Docker, Windows)
-const fontBoldPath = path.resolve(__dirname, "../assets/fonts/segoeuib.ttf");
-const fontRegPath = path.resolve(__dirname, "../assets/fonts/segoeui.ttf");
-const altFontBoldPath = path.resolve(__dirname, "assets/fonts/segoeuib.ttf");
-const altFontRegPath = path.resolve(__dirname, "assets/fonts/segoeui.ttf");
-
-if (fs.existsSync(fontBoldPath)) {
-  GlobalFonts.registerFromPath(fontBoldPath, "HollowBold");
-  GlobalFonts.registerFromPath(fontBoldPath, "Segoe UI");
-} else if (fs.existsSync(altFontBoldPath)) {
-  GlobalFonts.registerFromPath(altFontBoldPath, "HollowBold");
-  GlobalFonts.registerFromPath(altFontBoldPath, "Segoe UI");
+function registerBundledFont(relFileName, ...familyNames) {
+  const p1 = path.resolve(__dirname, "../assets/fonts", relFileName);
+  const p2 = path.resolve(__dirname, "assets/fonts", relFileName);
+  const target = fs.existsSync(p1) ? p1 : (fs.existsSync(p2) ? p2 : null);
+  if (target) {
+    for (const fam of familyNames) {
+      try {
+        GlobalFonts.registerFromPath(target, fam);
+      } catch (err) {
+        console.error(`[FontLoader] Gagal mendaftarkan ${fam} dari ${relFileName}:`, err.message);
+      }
+    }
+  }
 }
 
-if (fs.existsSync(fontRegPath)) {
-  GlobalFonts.registerFromPath(fontRegPath, "HollowRegular");
-} else if (fs.existsSync(altFontRegPath)) {
-  GlobalFonts.registerFromPath(altFontRegPath, "HollowRegular");
-}
+registerBundledFont("segoeuib.ttf", "HollowBold", "Segoe UI");
+registerBundledFont("segoeui.ttf", "HollowRegular");
+registerBundledFont("raidercrusadersemistraight.ttf", "RaiderCrusader");
+registerBundledFont("Montserrat-Bold.ttf", "Montserrat", "MontserratBold");
+registerBundledFont("Montserrat-SemiBold.ttf", "MontserratSemiBold");
 
 // ==========================================
 // 🎨 SHARED CANVAS UTILITIES & HELPERS
@@ -325,30 +327,32 @@ async function generateWelcomeCanvas(member) {
 
   const hexCX = 652;
 
-  // 3. Middle Hexagonal Chamber: Top Subtitle
+  // 3. Middle Hexagonal Chamber: Top Subtitle (Montserrat)
   ctx.save();
   ctx.textAlign = "center";
-  ctx.fillStyle = "#E2E8F0";
-  ctx.font = "bold 11.5px HollowBold, Segoe UI, sans-serif";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = "#CBD5E1";
+  ctx.font = "bold 11px Montserrat, Segoe UI, sans-serif";
   ctx.shadowColor = "rgba(255, 255, 255, 0.35)";
   ctx.shadowBlur = 6;
   ctx.fillText("W E L C O M E ,   S U R V I V O R", hexCX, 191);
   ctx.restore();
 
-  // 4. Middle Hexagonal Chamber: Futuristic 3D Chrome USERNAME
+  // 4. Middle Hexagonal Chamber: Futuristic 3D Chrome USERNAME (RaiderCrusader)
   const fallbackUser = sanitizeCanvasText(member.user?.username, "RECRUIT");
   const rawName = member.displayName || member.user?.username || fallbackUser;
   const cleanName = sanitizeCanvasText(rawName, fallbackUser).toUpperCase();
   const nameLength = cleanName.length;
-  const nameFontSize = nameLength > 20 ? 22 : nameLength > 15 ? 26 : nameLength > 10 ? 32 : 38;
-  const textY = 237;
+  const nameFontSize = nameLength > 20 ? 22 : nameLength > 15 ? 26 : nameLength > 11 ? 30 : 36;
+  const textY = 236;
 
   ctx.save();
   ctx.textAlign = "center";
-  ctx.font = `italic 900 ${nameFontSize}px HollowBold, Segoe UI, sans-serif`;
+  ctx.textBaseline = "middle";
+  ctx.font = `${nameFontSize}px RaiderCrusader, HollowBold, sans-serif`;
 
   // Specular 3D Chrome Gradient
-  const textGrad = ctx.createLinearGradient(0, textY - nameFontSize + 6, 0, textY + 2);
+  const textGrad = ctx.createLinearGradient(0, textY - nameFontSize / 2, 0, textY + nameFontSize / 2 + 2);
   textGrad.addColorStop(0.00, "#FFFFFF");
   textGrad.addColorStop(0.20, "#F8FAFC");
   textGrad.addColorStop(0.42, "#CBD5E1");
@@ -357,7 +361,7 @@ async function generateWelcomeCanvas(member) {
   textGrad.addColorStop(1.00, "#64748B");
 
   // 4a. Dark depth shadow
-  ctx.shadowColor = "rgba(0, 0, 0, 0.85)";
+  ctx.shadowColor = "rgba(0, 0, 0, 0.9)";
   ctx.shadowBlur = 4;
   ctx.shadowOffsetX = 0;
   ctx.shadowOffsetY = 3;
@@ -379,17 +383,22 @@ async function generateWelcomeCanvas(member) {
   ctx.strokeText(cleanName, hexCX, textY);
   ctx.restore();
 
-  // 5. Lower Chamber: SURVIVOR ID & Chrome Hexagonal Chevron Pill Badge
+  // 5. Lower Chamber: SURVIVOR ID (Montserrat, enlarged & spaced) & Hexagonal Pill Badge (Centered)
+  const barCenterY = 317.5; // (297 + 338) / 2 = 317.5
   ctx.save();
-  ctx.fillStyle = "#E2E8F0";
-  ctx.font = "bold 12px HollowBold, Segoe UI, sans-serif";
   ctx.textAlign = "start";
-  ctx.fillText("SURVIVOR ID", 522, 324);
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = "#E2E8F0";
+  ctx.font = "bold 13.5px Montserrat, Segoe UI, sans-serif";
+  ctx.shadowColor = "rgba(255, 255, 255, 0.3)";
+  ctx.shadowBlur = 4;
+  ctx.fillText("S U R V I V O R   I D", 522, barCenterY);
+  ctx.restore();
 
   const pillW = 148;
   const pillH = 26;
   const pillX = 708;
-  const pillY = 307;
+  const pillY = barCenterY - pillH / 2; // Exactly 7.5px from top border (297) and 7.5px from bottom border (338)
   const bevel = 13;
 
   function drawHexPill(x, y, w, h, b) {
@@ -411,8 +420,8 @@ async function generateWelcomeCanvas(member) {
 
   // Pill Specular Glow & Fill
   ctx.save();
-  ctx.shadowColor = "rgba(255, 255, 255, 0.6)";
-  ctx.shadowBlur = 14;
+  ctx.shadowColor = "rgba(255, 255, 255, 0.65)";
+  ctx.shadowBlur = 12;
   drawHexPill(pillX, pillY, pillW, pillH, bevel);
   ctx.fillStyle = pillGrad;
   ctx.fill();
@@ -427,10 +436,12 @@ async function generateWelcomeCanvas(member) {
   // Text inside pill (#0001 format)
   const count = member.guild?.memberCount || 1;
   const formattedCount = "#" + String(count).padStart(4, "0");
+  ctx.save();
   ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
   ctx.fillStyle = "#050507";
   ctx.font = "italic 900 15px HollowBold, Segoe UI, sans-serif";
-  ctx.fillText(formattedCount, pillX + pillW / 2, pillY + 18);
+  ctx.fillText(formattedCount, pillX + pillW / 2, barCenterY);
   ctx.restore();
 
   return canvas.toBuffer("image/png");
