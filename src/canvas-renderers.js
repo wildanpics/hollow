@@ -323,69 +323,114 @@ async function generateWelcomeCanvas(member) {
     ctx.restore();
   }
 
-  // 3. Right Chrome Hexagonal Main Panel (centered at x = 652, y = 164..272)
   const hexCX = 652;
+
+  // 3. Middle Hexagonal Chamber: Top Subtitle
   ctx.save();
   ctx.textAlign = "center";
-
-  // Top sub-label
-  ctx.fillStyle = "#A1A1AA";
-  ctx.font = "600 10px Segoe UI, sans-serif";
-  const welcomeSub = "WELCOME TO HOLLOWBORN";
-  const subSpacing = 3.2;
-  let subTotalW = 0;
-  for (const ch of welcomeSub) subTotalW += ctx.measureText(ch).width + subSpacing;
-  ctx.textAlign = "start";
-  drawTrackedText(ctx, welcomeSub, hexCX - (subTotalW - subSpacing) / 2, 190, subSpacing);
-
-  // Member Display Name
-  ctx.textAlign = "center";
-  const fallbackUser = sanitizeCanvasText(member.user.username, "Recruit");
-  const rawName = member.displayName || member.user.username;
-  const cleanName = sanitizeCanvasText(rawName, fallbackUser);
-  const displayName = cleanName.length > 26 ? cleanName.slice(0, 24) + "..." : cleanName;
-  const nameFontSize = displayName.length > 19 ? 23 : displayName.length > 13 ? 28 : 34;
-
-  ctx.fillStyle = "#FFFFFF";
-  ctx.shadowColor = "rgba(255, 255, 255, 0.25)";
-  ctx.shadowBlur = 10;
-  ctx.font = `bold ${nameFontSize}px Segoe UI, sans-serif`;
-  ctx.fillText(displayName, hexCX, 229, 390);
-  ctx.shadowBlur = 0;
-
-  // @username
-  const cleanHandle = sanitizeCanvasText((member.user.username || member.user.tag || "recruit").replace(/#0$/, ""), "recruit");
-  ctx.fillStyle = "#CBD5E1";
-  ctx.font = "500 13.5px Segoe UI, sans-serif";
-  ctx.fillText("@" + cleanHandle, hexCX, 252, 360);
+  ctx.fillStyle = "#E2E8F0";
+  ctx.font = "bold 11.5px HollowBold, Segoe UI, sans-serif";
+  ctx.shadowColor = "rgba(255, 255, 255, 0.35)";
+  ctx.shadowBlur = 6;
+  ctx.fillText("W E L C O M E ,   S U R V I V O R", hexCX, 191);
   ctx.restore();
 
-  // 4. Right Bottom Chrome Pill Bar (right of 👥 | at x = 498..890, midY = 318)
-  const memberCount = member.guild.memberCount;
-  const partLeft = `SURVIVOR RECRUIT #${memberCount}`;
-  const partSep = "   •   ";
-  const partRight = "SELAMAT DATANG DI KOMUNITAS";
+  // 4. Middle Hexagonal Chamber: Futuristic 3D Chrome USERNAME
+  const fallbackUser = sanitizeCanvasText(member.user?.username, "RECRUIT");
+  const rawName = member.displayName || member.user?.username || fallbackUser;
+  const cleanName = sanitizeCanvasText(rawName, fallbackUser).toUpperCase();
+  const nameLength = cleanName.length;
+  const nameFontSize = nameLength > 20 ? 22 : nameLength > 15 ? 26 : nameLength > 10 ? 32 : 38;
+  const textY = 237;
 
   ctx.save();
-  ctx.font = "bold 11.5px Segoe UI, sans-serif";
-  const wLeft = ctx.measureText(partLeft).width;
-  ctx.font = "500 11px Segoe UI, sans-serif";
-  const wSep = ctx.measureText(partSep).width;
-  const wRight = ctx.measureText(partRight).width;
+  ctx.textAlign = "center";
+  ctx.font = `italic 900 ${nameFontSize}px HollowBold, Segoe UI, sans-serif`;
 
-  const pillTextStart = 516;
-  const pillBaseY = 322;
+  // Specular 3D Chrome Gradient
+  const textGrad = ctx.createLinearGradient(0, textY - nameFontSize + 6, 0, textY + 2);
+  textGrad.addColorStop(0.00, "#FFFFFF");
+  textGrad.addColorStop(0.20, "#F8FAFC");
+  textGrad.addColorStop(0.42, "#CBD5E1");
+  textGrad.addColorStop(0.50, "#FFFFFF");
+  textGrad.addColorStop(0.70, "#94A3B8");
+  textGrad.addColorStop(1.00, "#64748B");
 
-  ctx.font = "bold 11.5px Segoe UI, sans-serif";
-  ctx.fillStyle = "#FFFFFF";
-  ctx.fillText(partLeft, pillTextStart, pillBaseY);
+  // 4a. Dark depth shadow
+  ctx.shadowColor = "rgba(0, 0, 0, 0.85)";
+  ctx.shadowBlur = 4;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 3;
+  ctx.fillStyle = "#050507";
+  ctx.fillText(cleanName, hexCX, textY);
 
-  ctx.font = "500 11px Segoe UI, sans-serif";
-  ctx.fillStyle = "#71717A";
-  ctx.fillText(partSep, pillTextStart + wLeft, pillBaseY);
+  // 4b. Main metallic text with specular ambient glow
+  ctx.shadowColor = "rgba(255, 255, 255, 0.55)";
+  ctx.shadowBlur = 12;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 0;
+  ctx.fillStyle = textGrad;
+  ctx.fillText(cleanName, hexCX, textY);
 
-  ctx.fillStyle = "#D4D4D8";
-  ctx.fillText(partRight, pillTextStart + wLeft + wSep, pillBaseY, Math.max(120, 882 - (pillTextStart + wLeft + wSep)));
+  // 4c. Chrome bevel outline
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.45)";
+  ctx.lineWidth = 1;
+  ctx.strokeText(cleanName, hexCX, textY);
+  ctx.restore();
+
+  // 5. Lower Chamber: SURVIVOR ID & Chrome Hexagonal Chevron Pill Badge
+  ctx.save();
+  ctx.fillStyle = "#E2E8F0";
+  ctx.font = "bold 12px HollowBold, Segoe UI, sans-serif";
+  ctx.textAlign = "start";
+  ctx.fillText("SURVIVOR ID", 522, 324);
+
+  const pillW = 148;
+  const pillH = 26;
+  const pillX = 708;
+  const pillY = 307;
+  const bevel = 13;
+
+  function drawHexPill(x, y, w, h, b) {
+    ctx.beginPath();
+    ctx.moveTo(x + b, y);
+    ctx.lineTo(x + w - b, y);
+    ctx.lineTo(x + w, y + h / 2);
+    ctx.lineTo(x + w - b, y + h);
+    ctx.lineTo(x + b, y + h);
+    ctx.lineTo(x, y + h / 2);
+    ctx.closePath();
+  }
+
+  const pillGrad = ctx.createLinearGradient(0, pillY, 0, pillY + pillH);
+  pillGrad.addColorStop(0.00, "#FFFFFF");
+  pillGrad.addColorStop(0.35, "#E2E8F0");
+  pillGrad.addColorStop(0.70, "#CBD5E1");
+  pillGrad.addColorStop(1.00, "#FFFFFF");
+
+  // Pill Specular Glow & Fill
+  ctx.save();
+  ctx.shadowColor = "rgba(255, 255, 255, 0.6)";
+  ctx.shadowBlur = 14;
+  drawHexPill(pillX, pillY, pillW, pillH, bevel);
+  ctx.fillStyle = pillGrad;
+  ctx.fill();
+  ctx.restore();
+
+  // Pill Bevel Outline
+  drawHexPill(pillX, pillY, pillW, pillH, bevel);
+  ctx.strokeStyle = "#FFFFFF";
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
+
+  // Text inside pill (#0001 format)
+  const count = member.guild?.memberCount || 1;
+  const formattedCount = "#" + String(count).padStart(4, "0");
+  ctx.textAlign = "center";
+  ctx.fillStyle = "#050507";
+  ctx.font = "italic 900 15px HollowBold, Segoe UI, sans-serif";
+  ctx.fillText(formattedCount, pillX + pillW / 2, pillY + 18);
   ctx.restore();
 
   return canvas.toBuffer("image/png");

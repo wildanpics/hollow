@@ -386,7 +386,7 @@ async function buildWelcomeTestMessage(member) {
   const attachment = new AttachmentBuilder(buffer, { name: "welcome-tactical.png" });
 
   return {
-    content: `🚨 **PERINGATAN RADAR:** Survivor baru mendarat di Site 2: <@${member.id}>`,
+    content: `📡 **SIGNAL ACQUIRED:** A new survivor has been detected in HOLLOWBORN: <@${member.id}>`,
     files: [attachment]
   };
 }

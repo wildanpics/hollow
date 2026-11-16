@@ -10,7 +10,7 @@ async function sendWelcomeSetupPreview(targetChannel, member) {
   const welcomeBuffer = await generateWelcomeCanvas(member);
   const attachment = new AttachmentBuilder(welcomeBuffer, { name: "welcome-tactical.png" });
   return targetChannel.send({
-    content: `🚨 **PERINGATAN RADAR:** Survivor baru mendarat di Site 2: <@${member.id}>`,
+    content: `📡 **SIGNAL ACQUIRED:** A new survivor has been detected in HOLLOWBORN: <@${member.id}>`,
     files: [attachment]
   });
 }

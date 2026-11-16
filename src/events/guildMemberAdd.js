@@ -44,7 +44,7 @@ module.exports = {
         const attachment = new AttachmentBuilder(welcomeBuffer, { name: "welcome-tactical.png" });
 
         await welcomeChannel.send({
-          content: `🚨 **PERINGATAN RADAR:** Survivor baru mendarat di Site 2: <@${member.id}>`,
+          content: `📡 **SIGNAL ACQUIRED:** A new survivor has been detected in HOLLOWBORN: <@${member.id}>`,
           files: [attachment]
         });
         console.log(`[Welcome] Berhasil mengirim welcome canvas banner untuk ${member.user.tag} di channel #${welcomeChannel.name}`);
