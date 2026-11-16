@@ -47,11 +47,7 @@ function buildVerificationTutorialPayload(guildId) {
     new ButtonBuilder()
       .setLabel("🔊 Join Waiting Room / Masuk Waiting Room")
       .setStyle(ButtonStyle.Link)
-      .setURL(waitingRoomUrl),
-    new ButtonBuilder()
-      .setCustomId("check_my_queue")
-      .setLabel("📋 Cek Posisi Antrean (Check Queue)")
-      .setStyle(ButtonStyle.Secondary)
+      .setURL(waitingRoomUrl)
   );
 
   return {
