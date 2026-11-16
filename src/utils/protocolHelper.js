@@ -41,13 +41,13 @@ function buildProtocolPanel(chapterKey = "overview", lang = "id") {
 
   // 2. Dropdown Menu for Chapters
   const options = isEn ? [
-    { label: "Overview & Sovereign Decree", value: "overview", description: "Classification & Sovereign statement", emoji: "📜" },
+    { label: "Server Protocol Overview", value: "overview", description: "Official protocol overview & index", emoji: "📜" },
     { label: "Chapter I: Community Principles", value: "bab1", description: "Loyalty, Respect, Unity, Confidentiality, Responsibility", emoji: "🛡️" },
     { label: "Chapter II: Server Regulations", value: "bab2", description: "Conduct, Channel Usage, Content Security, Voice, Identity", emoji: "⚔️" },
     { label: "Chapter III: Security & Digital Protocols", value: "bab3", description: "Account Defense, Data Privacy, Feature Usage, Escalation", emoji: "🔐" },
     { label: "Chapter IV & V: Sanctions & Final Decree", value: "bab4", description: "Disciplinary actions, appeals & HOLLOWBORN decree", emoji: "⚖️" }
   ] : [
-    { label: "Mukadimah & Titah Sovereign", value: "overview", description: "Klasifikasi & Pernyataan Resmi The Sovereign", emoji: "📜" },
+    { label: "Ringkasan Protokol Server", value: "overview", description: "Ringkasan & daftar isi protokol resmi", emoji: "📜" },
     { label: "Bab I: Prinsip Komunitas", value: "bab1", description: "Loyalitas, Rasa Hormat, Persatuan, Kerahasiaan, Tanggung Jawab", emoji: "🛡️" },
     { label: "Bab II: Peraturan Server", value: "bab2", description: "Perilaku, Channel, Konten & Keamanan, Voice, Identitas", emoji: "⚔️" },
     { label: "Bab III: Keamanan & Etika Digital", value: "bab3", description: "Keamanan Akun, Perlindungan Data, Fitur Discord, Pelaporan", emoji: "🔐" },

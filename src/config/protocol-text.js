@@ -1,11 +1,9 @@
 const CHAPTERS_ID = {
   overview: {
-    title: "HOLLOWBORN — PROTOKOL SERVER // MUKADIMAH",
+    title: "HOLLOWBORN — PROTOKOL SERVER",
     description: `**KLASIFIKASI: INTERNAL / KHUSUS ANGGOTA HOLLOWBORN**
 
 ---
-
-### THE SOVEREIGN TELAH BERBICARA.
 
 Selamat datang di **HOLLOWBORN**.
 
@@ -141,12 +139,10 @@ Jadikan HOLLOWBORN sebagai tempat untuk berinteraksi, berbagi pengalaman, bermai
 
 const CHAPTERS_EN = {
   overview: {
-    title: "HOLLOWBORN — SERVER PROTOCOL // OVERVIEW",
+    title: "HOLLOWBORN — SERVER PROTOCOL",
     description: `**CLASSIFICATION: INTERNAL / HOLLOWBORN OPERATIVES ONLY**
 
 ---
-
-### THE SOVEREIGN HAS SPOKEN.
 
 Welcome to **HOLLOWBORN**.
 
