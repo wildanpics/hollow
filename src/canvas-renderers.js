@@ -343,8 +343,8 @@ async function generateWelcomeCanvas(member) {
   const rawName = member.displayName || member.user?.username || fallbackUser;
   const cleanName = sanitizeCanvasText(rawName, fallbackUser).toUpperCase();
   const nameLength = cleanName.length;
-  const nameFontSize = nameLength > 20 ? 22 : nameLength > 15 ? 26 : nameLength > 11 ? 30 : 36;
-  const textY = 236;
+  const nameFontSize = nameLength > 20 ? 28 : nameLength > 16 ? 34 : nameLength > 12 ? 40 : 44;
+  const textY = 225;
 
   ctx.save();
   ctx.textAlign = "center";
