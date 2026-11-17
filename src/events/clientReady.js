@@ -1,5 +1,4 @@
 const { Events, ActivityType } = require("discord.js");
-const { loadRoadmapProgress, syncRoadmapPermanentMessage } = require("../storage/roadmapStorage");
 const { startMabarReminderInterval, loadMabarSessions } = require("../utils/mabarManager");
 const { initVoiceTracking } = require("../storage/voiceStorage");
 const { initVoiceVerificationRecovery } = require("../utils/voiceVerificationManager");
@@ -12,13 +11,6 @@ module.exports = {
     client.user.setActivity("HOLLOWBORN | Survival", {
       type: ActivityType.Playing
     });
-
-    // Auto-sync pinned roadmap dashboard with latest Canvas graphic on startup
-    const initialRoadmap = loadRoadmapProgress();
-    if (initialRoadmap.channelId && initialRoadmap.messageId) {
-      await syncRoadmapPermanentMessage(client, initialRoadmap).catch(() => {});
-      console.log("[Roadmap] Pinned Roadmap Dashboard tersinkronisasi ke tampilan Canvas HUD terbaru.");
-    }
 
     // Load active persistent mabar sessions
     loadMabarSessions();

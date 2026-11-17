@@ -4,92 +4,18 @@
 
 const COMMANDS_REGISTRY = [
   {
-    name: "tips",
-    title: "💡 Ensiklopedia Tips Survival (SOTF)",
-    description: "Kumpulan tips bertahan hidup Sons of the Forest interaktif (Kelvin, Virginia, Base, Combat, Survival).",
-    category: "🌲 Panduan Sons of The Forest",
-    permission: "Semua Anggota",
-    usage: ["!tips", "/tips", "!tips <kategori>"],
-    examples: ["!tips", "!tips kelvin", "!tips combat"]
-  },
-  {
-    name: "item",
-    title: "🗺️ Lokasi Senjata & Item Kunci",
-    description: "Cari lokasi sekop, shotgun, katana, rebreather, kartu akses dan syarat pengambilannya.",
-    category: "🌲 Panduan Sons of The Forest",
-    permission: "Semua Anggota",
-    usage: ["!item <nama_item>", "/item nama:<item>", "!item (menu dropdown)"],
-    examples: ["!item shovel", "!item shotgun", "!item katana", "!item rebreather"]
-  },
-  {
-    name: "roadmap",
-    title: "📋 Roadmap Progres Tamat Game",
-    description: "Checklist urutan tamat Sons of the Forest dari hari pertama hingga Golden Door ending.",
-    category: "🌲 Panduan Sons of The Forest",
-    permission: "Semua Anggota",
-    usage: ["!roadmap", "/roadmap"],
-    examples: ["!roadmap", "/roadmap"]
-  },
-  {
-    name: "roadmap-setup",
-    title: "🗺️ Setup Channel Roadmap Permanen",
-    description: "Membuat channel khusus & memasang panel checklist interaktif roadmap Sons of the Forest.",
-    category: "🌲 Panduan Sons of The Forest",
-    permission: "Manage Roles / Owner",
-    usage: ["!roadmap-setup", "/roadmap-setup [channel]"],
-    examples: ["!roadmap-setup", "/roadmap-setup"]
-  },
-  {
-    name: "base",
-    title: "📍 Island Base & Marker Tracker",
-    description: "Catat dan lacak titik base camp, outpost, shelter darurat, dan jaringan zipline tim di pulau.",
-    category: "🌲 Panduan Sons of The Forest",
-    permission: "Semua Anggota",
-    usage: [
-      "!base (menu interaktif & tombol)",
-      "!base add <nama> | <lokasi> | [tipe] | [catatan]",
-      "!base delete <nama/nomor>",
-      "/base list",
-      "/base add",
-      "/base delete"
-    ],
-    examples: [
-      "!base",
-      "!base add Base Danau | Tepi Danau Barat | outpost | Ada 2 Drying Rack",
-      "/base list"
-    ]
-  },
-  {
     name: "profile",
     title: "🪪 Tactical Survivor ID Card",
-    description: "Kartu identitas survivor taktikal (PuffCorp ID) dengan Canvas, statistik ekspedisi, dan tema interaktif.",
-    category: "🌲 Panduan Sons of The Forest",
+    description: "Kartu identitas survivor taktikal dengan Canvas, statistik ekspedisi, dan tema interaktif.",
+    category: "🎮 Gaming & Komunitas",
     permission: "Semua Anggota",
     usage: ["!profile", "!profile @user", "/profile", "/profile member:@user"],
     examples: ["!profile", "/profile"]
   },
   {
-    name: "map",
-    title: "🗺️ Tactical Island Radar Map",
-    description: "Peta radar taktis pulau SOTF berbasis Canvas dengan plot titik base camp dan gua cerita interaktif.",
-    category: "🌲 Panduan Sons of The Forest",
-    permission: "Semua Anggota",
-    usage: ["!map", "!map bases", "!map story", "/map"],
-    examples: ["!map", "/map filter:bases"]
-  },
-  {
-    name: "loadout",
-    title: "🎒 Survival Loadout Blueprint",
-    description: "Blueprint matras tas survival SOTF dengan senjata utama, alat gua, armor, dan tombol ganti preset.",
-    category: "🌲 Panduan Sons of The Forest",
-    permission: "Semua Anggota",
-    usage: ["!loadout", "/loadout"],
-    examples: ["!loadout", "/loadout"]
-  },
-  {
     name: "leaderboard",
-    title: "🏆 Expedition Hall of Fame",
-    description: "Papan peringkat survivor teraktif di server berdasarkan roadmap, markas, dan mabar.",
+    title: "🏆 Voice Hall of Fame",
+    description: "Papan peringkat Top 10 survivor paling aktif di Voice Channel server.",
     category: "🎮 Gaming & Komunitas",
     permission: "Semua Anggota",
     usage: ["!leaderboard", "!top", "/leaderboard"],

@@ -58,69 +58,6 @@ const commands = [
     .addStringOption(o => o.setName("command").setDescription("Nama command spesifik (contoh: mabar, role-preset, role-create)").setRequired(false)),
 
   new SlashCommandBuilder()
-    .setName("tips")
-    .setDescription("Ensiklopedia tips bertahan hidup Sons of the Forest (interaktif dengan tombol kategori).")
-    .addStringOption(o => o.setName("kategori")
-      .setDescription("Pilih kategori tips spesifik")
-      .setRequired(false)
-      .addChoices(
-        { name: "👥 Kelvin & Virginia", value: "kelvin_virginia" },
-        { name: "🪓 Base Building & Pertahanan", value: "base_building" },
-        { name: "⚔️ Combat & Senjata", value: "combat" },
-        { name: "❄️ Survival, Makanan & Musim", value: "survival" },
-        { name: "🔦 Eksplorasi Gua & Bunker", value: "caves" }
-      )),
-
-  new SlashCommandBuilder()
-    .setName("item")
-    .setDescription("Cari lokasi senjata, alat selam, sekop, atau keycard penting Sons of The Forest.")
-    .addStringOption(o => o.setName("nama")
-      .setDescription("Nama item (contoh: shovel, shotgun, katana, rebreather, rope gun, keycard)")
-      .setRequired(false)),
-
-  new SlashCommandBuilder()
-    .setName("roadmap")
-    .setDescription("Panduan checklist urutan tamat cerita Sons of the Forest (Step-by-step Story)."),
-
-  new SlashCommandBuilder()
-    .setName("roadmap-setup")
-    .setDescription("Setup channel permanen & panel checklist interaktif roadmap Sons of the Forest.")
-    .addChannelOption(o => o.setName("channel").setDescription("Pilih channel tujuan (opsional, jika kosong bot buatkan channel khusus)").setRequired(false))
-    .setDefaultMemberPermissions(PermissionFlagsBits.ManageRoles),
-
-  new SlashCommandBuilder()
-    .setName("base")
-    .setDescription("Kelola titik base camp, shelter, zipline hub, dan titik penting tim di pulau SOTF.")
-    .addSubcommand(sub =>
-      sub.setName("list")
-        .setDescription("Lihat daftar seluruh base camp dan outpost aktif tim HOLLOWBORN.")
-    )
-    .addSubcommand(sub =>
-      sub.setName("add")
-        .setDescription("Tambah base camp atau titik penting baru di pulau.")
-        .addStringOption(o => o.setName("nama").setDescription("Nama base/shelter (contoh: Base Air Terjun)").setRequired(true))
-        .addStringOption(o => o.setName("tipe")
-          .setDescription("Tipe base / marker")
-          .setRequired(true)
-          .addChoices(
-            { name: "🏰 Base Utama (Main Base)", value: "main_base" },
-            { name: "⛺ Outpost / Shelter Darurat", value: "outpost" },
-            { name: "🚡 Jaringan Zipline Hub", value: "zipline" },
-            { name: "🚗 Parkir Kendaraan / Glider", value: "vehicle" },
-            { name: "📦 Gudang Stok & Cache", value: "cache" }
-          )
-        )
-        .addStringOption(o => o.setName("lokasi").setDescription("Lokasi atau patokan di pulau").setRequired(true))
-        .addStringOption(o => o.setName("catatan").setDescription("Fasilitas atau info penting (opsional)").setRequired(false))
-        .addStringOption(o => o.setName("koordinat").setDescription("Koordinat GPS atau arah mata angin (opsional)").setRequired(false))
-    )
-    .addSubcommand(sub =>
-      sub.setName("delete")
-        .setDescription("Hapus base dari daftar.")
-        .addStringOption(o => o.setName("nama").setDescription("Nama atau ID base yang ingin dihapus").setRequired(true))
-    ),
-
-  new SlashCommandBuilder()
     .setName("profile")
     .setDescription("Lihat kartu identitas survivor taktikal (PuffCorp ID) dengan Canvas.")
     .addUserOption(o => o.setName("member").setDescription("Pilih anggota yang ingin dicek profilnya (opsional)").setRequired(false))
@@ -132,32 +69,6 @@ const commands = [
         { name: "👑 Solafite Gold", value: "solafite" },
         { name: "☣️ Toxic Green", value: "toxic" }
       )),
-
-  new SlashCommandBuilder()
-    .setName("map")
-    .setDescription("Peta radar taktis pulau SOTF dengan plot titik markas dan gua cerita.")
-    .addStringOption(o => o.setName("filter").setDescription("Filter tampilan titik radar").setRequired(false)
-      .addChoices(
-        { name: "Semua Titik (Markas + Gua Cerita)", value: "all" },
-        { name: "Hanya Markas Tim HOLLOWBORN", value: "bases" },
-        { name: "Hanya Gua Utama & Pintu Emas", value: "story" },
-        { name: "Keycard & Fasilitas Bunker", value: "keycard" },
-        { name: "Crash Sites & Helipad", value: "crash" },
-        { name: "Tambang Solafite", value: "solafite" }
-      ))
-    .addStringOption(o => o.setName("sector").setDescription("Zoom sektor wilayah pulau").setRequired(false)
-      .addChoices(
-        { name: "🗺️ Full Island", value: "full" },
-        { name: "🌊 Pantai Utara (Rebreather)", value: "utara" },
-        { name: "🌲 Hutan & Danau Barat (Rope Gun)", value: "barat" },
-        { name: "🏔️ Pegunungan Salju (Shovel)", value: "gunung" },
-        { name: "⛳ Lapangan Golf & Timur (Katana)", value: "timur" },
-        { name: "🌋 Tebing Selatan (Golden Door)", value: "selatan" }
-      )),
-
-  new SlashCommandBuilder()
-    .setName("loadout")
-    .setDescription("Lihat blueprint matras tas survival SOTF dengan senjata, armor, dan gear gua."),
 
   new SlashCommandBuilder()
     .setName("leaderboard")

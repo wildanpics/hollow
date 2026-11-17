@@ -49,8 +49,13 @@ function buildGeneralHelpEmbed() {
     )
     .addFields(
       {
-        name: "💡 Panduan Survival Sons of The Forest",
-        value: "`!tips` • `!item <nama>` • `!roadmap` — Tips survival, lokasi senjata/sekop, dan urutan tamat game.",
+        name: "🛡️ Emperor Voice Verification",
+        value: "`!queue` • `!vstatus` • `!vsetup` — Sistem antrean verifikasi suara otomatis dengan siaran radio Kaisar.",
+        inline: false
+      },
+      {
+        name: "📜 Protokol & Aturan Server",
+        value: "`!psetup` atau `/protocol-setup` — Panel interaktif aturan server dua bahasa (ID/EN) per-bab.",
         inline: false
       },
       {
