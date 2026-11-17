@@ -8,9 +8,30 @@ module.exports = {
   once: true,
   async execute(client) {
     console.log(`HOLLOWBORN online sebagai ${client.user.tag}`);
-    client.user.setActivity("HOLLOWBORN | Survival", {
-      type: ActivityType.Playing
-    });
+    // Dynamic Rotating Presence (15 Detik Rotasi)
+    const activities = [
+      () => ({ name: "HOLLOWBORN // PROTOCOL", type: ActivityType.Watching }),
+      () => ({ name: "Signal Transmission", type: ActivityType.Listening }),
+      () => {
+        const totalMembers = client.guilds.cache.reduce((acc, g) => acc + (g.memberCount || 0), 0);
+        return { name: `${totalMembers.toLocaleString("id-ID")} Operatives`, type: ActivityType.Watching };
+      },
+      () => ({ name: "BORN FROM NOTHING. UNITED AS ONE", type: ActivityType.Playing })
+    ];
+
+    let currentActivityIndex = 0;
+    const rotateActivity = () => {
+      try {
+        const act = activities[currentActivityIndex]();
+        client.user.setActivity(act.name, { type: act.type });
+        currentActivityIndex = (currentActivityIndex + 1) % activities.length;
+      } catch (err) {
+        // Abaikan jika terjadi glitch koneksi sesaat saat update presence
+      }
+    };
+
+    rotateActivity();
+    setInterval(rotateActivity, 15000);
 
     // Load active persistent mabar sessions
     loadMabarSessions();
